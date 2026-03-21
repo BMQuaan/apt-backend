@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: apt
+  datasource:
+    url: jdbc:postgresql://localhost:5432/apt_db
+    username: postgres
+    password: quan123
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    secret: "182865cbe7b41daf860ce70519348a829091e65ede99cc11e07975fc219ff642"
+    access-token-expiration: 1800000
+    refresh-token-expiration: 604800000
+  cors:
+    allowed-origins: "http://localhost:3000"
+server:
+  port: 8080
