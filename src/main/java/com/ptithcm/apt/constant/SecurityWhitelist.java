@@ -4,13 +4,13 @@ public final class SecurityWhitelist {
     private SecurityWhitelist() {}
 
     public static final String[] AUTH_WHITELIST = {
-            "/api/auth/login",
-            "/api/auth/register",
-            "/api/auth/refresh-token",
-            "/api/auth/forgot-password",
-            "/api/auth/verify-otp",
-            "/api/auth/reset-password",
-            "/api/auth/test",
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/auth/refresh-token",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/verify-otp",
+            "/api/v1/auth/reset-password",
+            "/api/v1/auth/test",
             "/api/public/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
