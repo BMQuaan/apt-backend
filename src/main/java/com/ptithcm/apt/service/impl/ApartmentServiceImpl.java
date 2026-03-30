@@ -32,10 +32,10 @@ public class ApartmentServiceImpl implements ApartmentService {
             throw new RuntimeException("The room number must not be left blank");
         }
         if (apartment.getFloor() == null || apartment.getFloor() <= 0) {
-            throw new RuntimeException("The floor number must be greater than 0");
+            throw new RuntimeException("The floor number must be greater than 0 and do not leave empty");
         }
         if (apartment.getArea() == null || apartment.getArea().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("The room area must be greater than 0");
+            throw new RuntimeException("The room area must be greater than 0 and do not leave empty");
         }
 
         String expectedFormart = "^" + apartment.getFloor() + "0\\d+$";
@@ -69,10 +69,10 @@ public class ApartmentServiceImpl implements ApartmentService {
             throw new RuntimeException("The room number must not be left blank");
         }
         if (apartmentDetails.getFloor() == null || apartmentDetails.getFloor() <= 0) {
-            throw new RuntimeException("The floor number must be greater than 0");
+            throw new RuntimeException("The floor number must be greater than 0 do not leave empty");
         }
         if (apartmentDetails.getArea() == null || apartmentDetails.getArea().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("The room area must be greater than 0");
+            throw new RuntimeException("The room area must be greater than 0 do not leave empty");
         }
 
         String expectedFormat = "^" + apartmentDetails.getFloor() + "0\\d+$";
