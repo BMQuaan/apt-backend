@@ -10,6 +10,7 @@ import com.ptithcm.apt.repository.TokenRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.service.AuthService;
 import com.ptithcm.apt.service.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,19 +37,22 @@ public class AuthServiceImpl implements AuthService {
     private long refreshTokenExpiration;
 
     @Override
-    public TokenResponse login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new NotFoundException("User không tồn tại"));
 
         String jwtToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        revokeAllUserTokens(user);
-        saveUserToken(user, refreshToken);
+        String deviceType = getDeviceType(httpRequest);
+
+        revokeTokensByDeviceType(user, deviceType);
+
+        saveUserToken(user, refreshToken, deviceType);
 
         TokenResponse.UserInfo userInfo = TokenResponse.UserInfo.builder()
                 .id(user.getId())
@@ -65,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenResponse refreshToken(RefreshTokenRequest request) {
-        final String rawRefreshToken = request.getRefreshToken();
+        final String rawRefreshToken = request.refreshToken();
 
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             throw new RuntimeException("Refresh token không được để trống");
@@ -93,31 +97,31 @@ public class AuthServiceImpl implements AuthService {
 
                 return TokenResponse.builder()
                         .accessToken(accessToken)
-                        .refreshToken(rawRefreshToken)
                         .build();
             }
         }
         throw new RuntimeException("Refresh token đã hết hạn hoặc bị thu hồi");
     }
 
-    private void saveUserToken(User user, String rawRefreshToken) {
+    private void revokeTokensByDeviceType(User user, String deviceType) {
+        List<Token> validTokens = tokenRepository.findAllValidTokenByUserAndDeviceType(user.getId(), deviceType);
+        if (validTokens.isEmpty()) return;
+
+        validTokens.forEach(token -> token.setRevoked(true));
+        tokenRepository.saveAll(validTokens);
+    }
+
+    private void saveUserToken(User user, String rawRefreshToken, String deviceType) {
         String hashedToken = hashToken(rawRefreshToken);
 
         Token token = Token.builder()
                 .user(user)
                 .token(hashedToken)
+                .deviceInfo(deviceType)
                 .expiresAt(LocalDateTime.now().plus(refreshTokenExpiration, ChronoUnit.MILLIS))
                 .revoked(false)
                 .build();
         tokenRepository.save(token);
-    }
-
-    private void revokeAllUserTokens(User user) {
-        List<Token> validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
-        if (validUserTokens.isEmpty()) return;
-
-        validUserTokens.forEach(token -> token.setRevoked(true));
-        tokenRepository.saveAll(validUserTokens);
     }
 
     private String hashToken(String token) {
@@ -137,5 +141,16 @@ public class AuthServiceImpl implements AuthService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Không tìm thấy thuật toán mã hóa", e);
         }
+    }
+
+    private String getDeviceType(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent != null) {
+            String ua = userAgent.toLowerCase();
+            if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone") || ua.contains("ipad")) {
+                return "MOBILE";
+            }
+        }
+        return "WEB";
     }
 }
