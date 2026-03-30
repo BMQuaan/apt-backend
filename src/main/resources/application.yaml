@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/apt_db
     username: postgres
-    password: quan123
+    password: Luan14102019
 
   jpa:
     hibernate:
