@@ -54,26 +54,38 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout ->
-                        logout.logoutUrl("/api/auth/logout")
+                        logout.logoutUrl("/api/v1/auth/logout")
                                 .addLogoutHandler(logoutHandler)
-                                .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
+                                .logoutSuccessHandler((request, response, authentication) -> {
+                                    SecurityContextHolder.clearContext();
+                                    response.setStatus(HttpServletResponse.SC_OK);
+                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                    response.setCharacterEncoding("UTF-8");
+                                    ApiResponse<Void> apiResponse = ApiResponse.success(
+                                            null,
+                                            "Đăng xuất thành công"
+                                    );
+                                    response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+                                })
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
                             ApiResponse<Void> apiResponse = ApiResponse.error(
                                     HttpServletResponse.SC_UNAUTHORIZED,
-                                    "You need to be authenticated to access this resource."
+                                    "Bạn cần đăng nhập để truy cập tài nguyên này."
                             );
                             response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
                             ApiResponse<Void> apiResponse = ApiResponse.error(
                                     HttpServletResponse.SC_FORBIDDEN,
-                                    "You do not have permission to access this resource."
+                                    "Bạn không có quyền truy cập tài nguyên này."
                             );
                             response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
                         })

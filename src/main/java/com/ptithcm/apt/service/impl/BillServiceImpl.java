@@ -36,8 +36,8 @@ public class BillServiceImpl implements BillService {
                 .add(req.electricityFee());
 
         Bill bill = Bill.builder()
-                .apartment(apartmentRepository.findById(req.apartment())
-                        .orElseThrow(() -> new RuntimeException("Apartment not found")))
+                // .apartment(apartmentRepository.findById(req.apartment())
+                //         .orElseThrow(() -> new RuntimeException("Apartment not found")))
                 .billingMonth(LocalDateTime.now().getMonthValue())
                 .billingYear(LocalDateTime.now().getYear())
                 .waterFee(req.waterFee())
