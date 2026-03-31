@@ -2,14 +2,15 @@ package com.ptithcm.apt.service;
 
 import java.util.List;
 
-import com.ptithcm.apt.entity.Resident;
+import com.ptithcm.apt.dto.request.ResidentRequest;
+import com.ptithcm.apt.dto.response.ResidentResponse;
 
 public interface ResidentService {
-    public List<Resident> getAllResident();
+    List<ResidentResponse> getAllResidents();
 
-    Resident createResident(Resident resident);
+    ResidentResponse getResidentById(Integer id);
 
-    Resident updateResident(Integer id, Resident residentDetail);
+    ResidentResponse createResident(ResidentRequest request);
 
-    Resident getResidentById(Integer id);
+    ResidentResponse updateResident(Integer id, ResidentRequest request);
 }

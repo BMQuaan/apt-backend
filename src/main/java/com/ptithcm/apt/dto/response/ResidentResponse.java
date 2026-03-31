@@ -1,6 +1,6 @@
 package com.ptithcm.apt.dto.response;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
@@ -12,11 +12,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApartmentResponse {
+public class ResidentResponse {
     private Long id;
-    private String roomNumber;
-    private Integer floor;
-    private BigDecimal area;
-    private String status;
+    private String fullName;
+    private String citizenIdentity;
+    private String phone;
+    private String email;
+    private LocalDate dob;
+
+    private Integer userId;
     private LocalDateTime createdAt;
 }
