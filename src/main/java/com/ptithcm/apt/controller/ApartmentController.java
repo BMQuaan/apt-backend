@@ -41,7 +41,7 @@ public class ApartmentController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/apartment/{id}")
-    public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Integer id,
+    public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Long id,
             @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
@@ -50,7 +50,7 @@ public class ApartmentController {
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/apartment/{id}")
-    public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Integer id) {
+    public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Long id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));
     }
 
