@@ -2,7 +2,6 @@ package com.ptithcm.apt.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,8 +35,8 @@ public class BillServiceImpl implements BillService {
                 .add(req.electricityFee());
 
         Bill bill = Bill.builder()
-                // .apartment(apartmentRepository.findById(req.apartment())
-                //         .orElseThrow(() -> new RuntimeException("Apartment not found")))
+                .apartment(apartmentRepository.findById(req.apartment())
+                        .orElseThrow(() -> new RuntimeException("Apartment not found")))
                 .billingMonth(LocalDateTime.now().getMonthValue())
                 .billingYear(LocalDateTime.now().getYear())
                 .waterFee(req.waterFee())
