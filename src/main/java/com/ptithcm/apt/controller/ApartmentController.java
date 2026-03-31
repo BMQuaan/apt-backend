@@ -2,46 +2,55 @@ package com.ptithcm.apt.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.ptithcm.apt.entity.Apartment;
-import com.ptithcm.apt.service.ApartmentService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ptithcm.apt.dto.request.ApartmentRequest;
+import com.ptithcm.apt.dto.response.ApartmentResponse;
+import com.ptithcm.apt.service.ApartmentService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/admin/apartments")
+@RequestMapping("/api/v1/admin")
 @CrossOrigin(originPatterns = "*")
+@RequiredArgsConstructor
 public class ApartmentController {
-    @Autowired
-    private ApartmentService apartmentService;
 
-    @GetMapping
-    public ResponseEntity<List<Apartment>> getAllApartments() {
+    private final ApartmentService apartmentService;
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/apartment")
+    public ResponseEntity<List<ApartmentResponse>> getAllApartments() {
         return ResponseEntity.ok(apartmentService.getAllApartments());
     }
 
-    @PostMapping
-    public ResponseEntity<Apartment> createApartment(@RequestBody Apartment apartment) {
-        return ResponseEntity.ok(apartmentService.createApartment(apartment));
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/apartment")
+    public ResponseEntity<ApartmentResponse> createApartment(@RequestBody ApartmentRequest request) {
+        return ResponseEntity.ok(apartmentService.createApartment(request));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Apartment> updateApartment(@PathVariable Integer id, @RequestBody Apartment apartment) {
-        return ResponseEntity.ok(apartmentService.updateApartment(id, apartment));
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/apartment/{id}")
+    public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Integer id,
+            @RequestBody ApartmentRequest request) {
+        return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
 
     // Chi tiết admin
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
-    @GetMapping("/{id}")
-    public ResponseEntity<Apartment> getApartmentById(@PathVariable Integer id) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/apartment/{id}")
+    public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Integer id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));
     }
 
