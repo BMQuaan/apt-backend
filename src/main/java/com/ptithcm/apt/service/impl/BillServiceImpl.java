@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.ptithcm.apt.dto.request.BillRequest;
@@ -26,17 +28,25 @@ public class BillServiceImpl implements BillService {
     private final ApartmentRepository apartmentRepository;
 
     @Override
-    public CreateBillResponse createBill(BillRequest req) {
+    public CreateBillResponse createBill(BillRequest req) {     
+        BigDecimal totalAmount = req.waterFee()
+                .add(req.safetyFee())
+                .add(req.managementFee())
+                .add(req.sanitationFee())
+                .add(req.electricityFee());
+
         Bill bill = Bill.builder()
-                .apartment(apartmentRepository.findById(req.apartment()).get())
+                .apartment(apartmentRepository.findById(req.apartment())
+                        .orElseThrow(() -> new RuntimeException("Apartment not found")))
                 .billingMonth(LocalDateTime.now().getMonthValue())
                 .billingYear(LocalDateTime.now().getYear())
-                .waterFee(BigDecimal.ZERO)
-                .safetyFee(BigDecimal.ZERO)
-                .managementFee(BigDecimal.ZERO)
-                .sanitationFee(BigDecimal.ZERO)
-                .electricityFee(BigDecimal.ZERO)
-                .totalAmount(BigDecimal.ZERO)
+                .waterFee(req.waterFee())
+                .safetyFee(req.safetyFee())
+                .managementFee(req.managementFee())
+                .sanitationFee(req.sanitationFee())
+                .electricityFee(req.electricityFee())
+                .totalAmount(totalAmount)
+                .status(BillStatus.UNPAID.toString())
                 .build();
         billRepository.save(bill);
 
@@ -93,8 +103,8 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public List<Bill> getBills() {
-        return billRepository.findAll();
+    public Page<Bill> getBills(Pageable pageable) {
+        return billRepository.findAll(pageable);
     }
 
 }
