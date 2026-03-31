@@ -29,6 +29,7 @@ public class ApartmentServiceImpl implements ApartmentService {
         return apartmentRepository.findAll()
                 .stream()
                 .map(entity -> new ApartmentResponse(
+                        entity.getId(),
                         entity.getRoomNumber(),
                         entity.getFloor(),
                         entity.getArea(),
@@ -79,6 +80,7 @@ public class ApartmentServiceImpl implements ApartmentService {
         Apartment savedEntity = apartmentRepository.save(apartmentSave);
 
         return new ApartmentResponse(
+                savedEntity.getId(),
                 savedEntity.getRoomNumber(),
                 savedEntity.getFloor(),
                 savedEntity.getArea(),
@@ -129,6 +131,7 @@ public class ApartmentServiceImpl implements ApartmentService {
         Apartment updatedEntity = apartmentRepository.save(apartment);
 
         return new ApartmentResponse(
+                updatedEntity.getId(),
                 updatedEntity.getRoomNumber(),
                 updatedEntity.getFloor(),
                 updatedEntity.getArea(),
@@ -142,6 +145,7 @@ public class ApartmentServiceImpl implements ApartmentService {
                 .orElseThrow(() -> new RuntimeException("Not Found Room ID: " + id));
 
         return new ApartmentResponse(
+                apartment.getId(),
                 apartment.getRoomNumber(),
                 apartment.getFloor(),
                 apartment.getArea(),

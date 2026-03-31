@@ -13,7 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApartmentResponse {
-    // private Long id;
+    private Long id;
     private String roomNumber;
     private Integer floor;
     private BigDecimal area;
