@@ -15,4 +15,10 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
       where u.id = :userId and t.revoked = false
       """)
     List<Token> findAllValidTokenByUser(Long userId);
+
+    @Query(value = """
+      select t from Token t inner join User u on t.user.id = u.id
+      where u.id = :userId and t.revoked = false and t.deviceInfo = :deviceType
+      """)
+    List<Token> findAllValidTokenByUserAndDeviceType(Long userId, String deviceType);
 }
