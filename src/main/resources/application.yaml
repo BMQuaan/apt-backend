@@ -4,11 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/apt_db
     username: postgres
-<<<<<<< HEAD
     password: Luan14102019
-=======
-    password: long123
->>>>>>> c36fa4f1ed290dfe4c4af0e3c39a9430fcd91abb
 
   jpa:
     hibernate:

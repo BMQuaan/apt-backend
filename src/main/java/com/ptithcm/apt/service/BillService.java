@@ -14,6 +14,6 @@ import com.ptithcm.apt.entity.Bill;
 public interface BillService {
     public CreateBillResponse createBill(BillRequest req);
     public UpdateBillStatusResponse updateBillStatus(Long billId, UpdateBillStatusRequest req);
-    public Page<Bill> getBills(Pageable pageable);
+    public Page<Bill> getBillsByAdmin(Pageable pageable);
 
 }

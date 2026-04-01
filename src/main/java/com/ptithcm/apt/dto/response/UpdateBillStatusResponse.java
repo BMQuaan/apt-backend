@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.ptithcm.apt.enums.BillStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +28,7 @@ public class UpdateBillStatusResponse {
     private BigDecimal safetyFee;
     private BigDecimal sanitationFee;
     private BigDecimal totalAmount;
-    private String status;
+    private BillStatus status;
     private LocalDateTime paidAt;
     private LocalDateTime createdAt;
 }
