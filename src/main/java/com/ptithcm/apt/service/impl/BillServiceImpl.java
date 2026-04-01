@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 import com.ptithcm.apt.dto.request.BillRequest;
 import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
+import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
 import com.ptithcm.apt.enums.BillStatus;
+import com.ptithcm.apt.mappers.BillMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
 import com.ptithcm.apt.service.BillService;
@@ -25,11 +27,11 @@ public class BillServiceImpl implements BillService {
 
     private final BillRepository billRepository;
     private final ApartmentRepository apartmentRepository;
+    private final BillMapper billMapper;
 
     @Override
-    public CreateBillResponse createBill(BillRequest req) {     
+    public CreateBillResponse createBill(BillRequest req) {
         BigDecimal totalAmount = req.waterFee()
-                .add(req.safetyFee())
                 .add(req.managementFee())
                 .add(req.sanitationFee())
                 .add(req.electricityFee());
@@ -40,12 +42,11 @@ public class BillServiceImpl implements BillService {
                 .billingMonth(LocalDateTime.now().getMonthValue())
                 .billingYear(LocalDateTime.now().getYear())
                 .waterFee(req.waterFee())
-                .safetyFee(req.safetyFee())
                 .managementFee(req.managementFee())
                 .sanitationFee(req.sanitationFee())
                 .electricityFee(req.electricityFee())
                 .totalAmount(totalAmount)
-                .status(BillStatus.UNPAID.toString())
+                .status(BillStatus.UNPAID)
                 .build();
         billRepository.save(bill);
 
@@ -58,7 +59,6 @@ public class BillServiceImpl implements BillService {
                 .electricityFee(bill.getElectricityFee())
                 .waterFee(bill.getWaterFee())
                 .managementFee(bill.getManagementFee())
-                .safetyFee(bill.getSafetyFee())
                 .sanitationFee(bill.getSanitationFee())
                 .totalAmount(bill.getTotalAmount())
                 .status(bill.getStatus())
@@ -73,11 +73,11 @@ public class BillServiceImpl implements BillService {
 
         BillStatus newStatus = req.status();
 
-        if (bill.getStatus().equals(newStatus.toString())) {
+        if (bill.getStatus().equals(newStatus)) {
             throw new RuntimeException("Can not change to the same status");
         }
 
-        bill.setStatus(newStatus.toString());
+        bill.setStatus(newStatus);
         if (newStatus == BillStatus.PAID) {
             bill.setPaidAt(LocalDateTime.now());
         }
@@ -92,7 +92,6 @@ public class BillServiceImpl implements BillService {
                 .electricityFee(bill.getElectricityFee())
                 .waterFee(bill.getWaterFee())
                 .managementFee(bill.getManagementFee())
-                .safetyFee(bill.getSafetyFee())
                 .sanitationFee(bill.getSanitationFee())
                 .totalAmount(bill.getTotalAmount())
                 .status(bill.getStatus())
@@ -102,8 +101,9 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public Page<Bill> getBills(Pageable pageable) {
-        return billRepository.findAll(pageable);
+    public Page<GetBillsByAdminResponse> getBillsByAdmin(Pageable pageable) {
+        Page<Bill> bills = billRepository.findAll(pageable);
+        return bills.map(billMapper::toGetBillsByAdminResponse);
     }
 
 }
