@@ -29,7 +29,6 @@ public class BillServiceImpl implements BillService {
     @Override
     public CreateBillResponse createBill(BillRequest req) {     
         BigDecimal totalAmount = req.waterFee()
-                .add(req.safetyFee())
                 .add(req.managementFee())
                 .add(req.sanitationFee())
                 .add(req.electricityFee());
@@ -40,12 +39,11 @@ public class BillServiceImpl implements BillService {
                 .billingMonth(LocalDateTime.now().getMonthValue())
                 .billingYear(LocalDateTime.now().getYear())
                 .waterFee(req.waterFee())
-                .safetyFee(req.safetyFee())
                 .managementFee(req.managementFee())
                 .sanitationFee(req.sanitationFee())
                 .electricityFee(req.electricityFee())
                 .totalAmount(totalAmount)
-                .status(BillStatus.UNPAID.toString())
+                .status(BillStatus.UNPAID)
                 .build();
         billRepository.save(bill);
 
@@ -58,7 +56,6 @@ public class BillServiceImpl implements BillService {
                 .electricityFee(bill.getElectricityFee())
                 .waterFee(bill.getWaterFee())
                 .managementFee(bill.getManagementFee())
-                .safetyFee(bill.getSafetyFee())
                 .sanitationFee(bill.getSanitationFee())
                 .totalAmount(bill.getTotalAmount())
                 .status(bill.getStatus())
@@ -73,11 +70,11 @@ public class BillServiceImpl implements BillService {
 
         BillStatus newStatus = req.status();
 
-        if (bill.getStatus().equals(newStatus.toString())) {
+        if (bill.getStatus().equals(newStatus)) {
             throw new RuntimeException("Can not change to the same status");
         }
 
-        bill.setStatus(newStatus.toString());
+        bill.setStatus(newStatus);
         if (newStatus == BillStatus.PAID) {
             bill.setPaidAt(LocalDateTime.now());
         }
@@ -92,7 +89,6 @@ public class BillServiceImpl implements BillService {
                 .electricityFee(bill.getElectricityFee())
                 .waterFee(bill.getWaterFee())
                 .managementFee(bill.getManagementFee())
-                .safetyFee(bill.getSafetyFee())
                 .sanitationFee(bill.getSanitationFee())
                 .totalAmount(bill.getTotalAmount())
                 .status(bill.getStatus())
@@ -102,7 +98,7 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public Page<Bill> getBills(Pageable pageable) {
+    public Page<Bill> getBillsByAdmin(Pageable pageable) {
         return billRepository.findAll(pageable);
     }
 

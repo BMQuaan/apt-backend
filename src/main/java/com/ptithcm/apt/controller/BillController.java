@@ -45,8 +45,8 @@ public class BillController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<Bill>>> getBills(Pageable pageable) {
-        Page<Bill> bills = billService.getBills(pageable);
+    public ResponseEntity<ApiResponse<PageResponse<Bill>>> getBillsByAdmin(Pageable pageable) {
+        Page<Bill> bills = billService.getBillsByAdmin(pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
     }
     

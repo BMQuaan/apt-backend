@@ -6,6 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+
+import com.ptithcm.apt.enums.BillStatus;
 
 @Entity
 @Table(name = "bills", uniqueConstraints = {
@@ -44,10 +48,6 @@ public class Bill {
     @Builder.Default
     private BigDecimal managementFee = BigDecimal.ZERO;
 
-    @Column(name = "safety_fee", precision = 12, scale = 2)
-    @Builder.Default
-    private BigDecimal safetyFee = BigDecimal.ZERO;
-
     @Column(name = "sanitation_fee", precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal sanitationFee = BigDecimal.ZERO;
@@ -55,9 +55,11 @@ public class Bill {
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(length = 20)
+    @Column(columnDefinition = "bill_status") // <--- THÊM DÒNG NÀY
     @Builder.Default
-    private String status = "UNPAID"; // UNPAID, PAID
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    private BillStatus status = BillStatus.UNPAID;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "confirmed_by")
