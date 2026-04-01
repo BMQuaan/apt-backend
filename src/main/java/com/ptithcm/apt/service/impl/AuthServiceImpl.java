@@ -97,6 +97,7 @@ public class AuthServiceImpl implements AuthService {
 
                 return TokenResponse.builder()
                         .accessToken(accessToken)
+                        .refreshToken(rawRefreshToken)
                         .build();
             }
         }
@@ -147,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
         String userAgent = request.getHeader("User-Agent");
         if (userAgent != null) {
             String ua = userAgent.toLowerCase();
-            if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone") || ua.contains("ipad")) {
+            if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone") || ua.contains("ipad") || ua.contains("okhttp")) {
                 return "MOBILE";
             }
         }
