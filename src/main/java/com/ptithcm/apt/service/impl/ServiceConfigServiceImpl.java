@@ -27,53 +27,41 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
 
     @Override
     @Transactional
-    public void updateServicePrices(ServicePriceUpdateRequest request) {
+    public void updateServicePrice(ServicePriceUpdateRequest request) {
         LocalDate today = LocalDate.now();
         LocalDate startOfNextMonth = today.withDayOfMonth(1).plusMonths(1);
 
-        List<ServiceConfig> configsToSave = new ArrayList<>();
+        ServiceConfig currentConfig = serviceConfigRepository.findCurrentConfig(request.serviceCode())
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy dịch vụ: " + request.serviceCode()));
 
-        for (ServicePriceUpdateRequest.ServicePrice priceReq : request.prices()) {
-
-            ServiceConfig currentConfig = serviceConfigRepository.findCurrentConfig(priceReq.serviceCode())
-                    .orElseThrow(() -> new NotFoundException("Không tìm thấy dịch vụ: " + priceReq.serviceCode()));
-
-            // Chỉ cho phép áp dụng từ "ít nhất tháng sau"
-            if (priceReq.effectiveFrom().isBefore(startOfNextMonth)) {
-                throw new IllegalArgumentException("Ngày áp dụng cho dịch vụ " + priceReq.serviceCode() +
-                        " phải bắt đầu từ " + startOfNextMonth + " trở đi.");
-            }
-
-            // Không cho update bằng giá hiện tại
-            if (priceReq.newPrice().compareTo(currentConfig.getUnitPrice()) == 0) {
-                    throw new IllegalArgumentException("Dịch vụ " + priceReq.serviceCode() +
-                            " đang được áp dụng mức giá này rồi.");
-            }
-
-            // XỬ LÝ UPDATE CHO TƯƠNG LAI
-            Optional<ServiceConfig> upcomingOpt = serviceConfigRepository.findUpcomingConfig(priceReq.serviceCode());
-
-            if (upcomingOpt.isPresent()) {
-                // Đã có 1 bản ghi chờ -> Cập nhật đè lên nó
-                ServiceConfig upcoming = upcomingOpt.get();
-                upcoming.setUnitPrice(priceReq.newPrice());
-                upcoming.setEffectiveFrom(priceReq.effectiveFrom());
-                configsToSave.add(upcoming);
-            } else {
-                // Chưa có bản ghi chờ -> Tạo 1 bản ghi tương lai mới
-                ServiceConfig newConfig = ServiceConfig.builder()
-                        .serviceCode(currentConfig.getServiceCode())
-                        .serviceName(currentConfig.getServiceName())
-                        .unit(currentConfig.getUnit())
-                        .unitPrice(priceReq.newPrice())
-                        .effectiveFrom(priceReq.effectiveFrom())
-                        .build();
-                configsToSave.add(newConfig);
-            }
+        if (request.effectiveFrom().isBefore(startOfNextMonth)) {
+            throw new IllegalArgumentException("Ngày áp dụng cho dịch vụ " + request.serviceCode() +
+                    " phải bắt đầu từ " + startOfNextMonth + " trở đi.");
         }
 
-        if (!configsToSave.isEmpty()) {
-            serviceConfigRepository.saveAll(configsToSave);
+        if (request.newPrice().compareTo(currentConfig.getUnitPrice()) == 0) {
+            throw new IllegalArgumentException("Dịch vụ " + request.serviceCode() +
+                    " đang được áp dụng mức giá này rồi.");
+        }
+
+        Optional<ServiceConfig> upcomingOpt = serviceConfigRepository.findUpcomingConfig(request.serviceCode());
+
+        if (upcomingOpt.isPresent()) {
+            ServiceConfig upcoming = upcomingOpt.get();
+            upcoming.setUnitPrice(request.newPrice());
+            upcoming.setEffectiveFrom(request.effectiveFrom());
+
+            serviceConfigRepository.save(upcoming);
+        } else {
+            ServiceConfig newConfig = ServiceConfig.builder()
+                    .serviceCode(currentConfig.getServiceCode())
+                    .serviceName(currentConfig.getServiceName())
+                    .unit(currentConfig.getUnit())
+                    .unitPrice(request.newPrice())
+                    .effectiveFrom(request.effectiveFrom())
+                    .build();
+
+            serviceConfigRepository.save(newConfig);
         }
     }
 
