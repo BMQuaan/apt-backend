@@ -10,6 +10,5 @@ public record BillRequest(
         @NotNull @Positive BigDecimal electricityFee,
         @NotNull @Positive BigDecimal waterFee,
         @NotNull @Positive BigDecimal managementFee,
-        @NotNull @Positive BigDecimal safetyFee,
         @NotNull @Positive BigDecimal sanitationFee) {
 }
