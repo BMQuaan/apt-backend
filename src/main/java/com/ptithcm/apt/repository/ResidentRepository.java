@@ -14,4 +14,6 @@ public interface ResidentRepository extends JpaRepository<Resident, Long> {
     boolean existsByPhone(String phone);
 
     boolean existsByEmail(String email);
+
+    Optional<Resident> findByUser_Id(Long userId);
 }
