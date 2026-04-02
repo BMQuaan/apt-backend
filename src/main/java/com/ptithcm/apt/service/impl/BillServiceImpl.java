@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.ptithcm.apt.dto.request.BillRequest;
@@ -17,6 +18,7 @@ import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.mappers.BillMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
+import com.ptithcm.apt.repository.specifications.BillSpecifications;
 import com.ptithcm.apt.service.BillService;
 
 import lombok.RequiredArgsConstructor;
@@ -101,8 +103,10 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public Page<GetBillsByAdminResponse> getBillsByAdmin(Pageable pageable) {
-        Page<Bill> bills = billRepository.findAll(pageable);
+    public Page<GetBillsByAdminResponse> getBillsByAdmin(Integer month, Integer year, Long apartmentId,
+            BillStatus status, Pageable pageable) {
+        Specification<Bill> spec = BillSpecifications.hasFilters(month, year, apartmentId, status);
+        Page<Bill> bills = billRepository.findAll(spec, pageable);
         return bills.map(billMapper::toGetBillsByAdminResponse);
     }
 
