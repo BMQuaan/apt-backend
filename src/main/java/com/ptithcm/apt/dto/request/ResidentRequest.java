@@ -1,22 +1,23 @@
 package com.ptithcm.apt.dto.request;
 
-import java.time.LocalDate;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDate;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class ResidentRequest {
-
+    // 1. Thông tin cá nhân
     private String fullName;
-    private String citizenIdentity; // CCCD
-
+    private String citizenIdentity; // Căn cước công dân
     private String phone;
     private String email;
+    private LocalDate dob; // Ngày sinh
 
+    // 2. Thông tin nơi ở (Ghi vào bảng ResidentApartment)
+    private Long apartmentId;
+    private String role; // "OWNER" (Chủ nhà), "TENANT" (Người thuê), "MEMBER" (Thành viên)
+    private Boolean isHead; // Có phải chủ hộ không?
+    private LocalDate contractStart;
+    private LocalDate contractEnd; // Có thể null nếu vô thời hạn
 }

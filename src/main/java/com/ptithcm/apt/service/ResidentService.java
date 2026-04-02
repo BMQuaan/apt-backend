@@ -2,15 +2,23 @@ package com.ptithcm.apt.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.ptithcm.apt.dto.request.ResidentRequest;
+import com.ptithcm.apt.dto.request.UpdateResidentRequest;
+import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
 
 public interface ResidentService {
-    List<ResidentResponse> getAllResidents();
+    ResidentResponse updateResident(Long residentId, UpdateResidentRequest request);
 
-    ResidentResponse getResidentById(Integer id);
+    // ResidentResponse updateResident(Integer id, ResidentRequest request);
 
-    ResidentResponse createResident(ResidentRequest request);
+    Page<ResidentListResponse> getActiveResidents(String roomNumber, Pageable pageable);
 
-    ResidentResponse updateResident(Integer id, ResidentRequest request);
+    void moveOutResident(Long residentId, Long apartmentId);
+
+    void createResidentAndAssignApartment(ResidentRequest request);
+
 }

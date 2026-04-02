@@ -17,6 +17,7 @@ import com.ptithcm.apt.dto.request.ApartmentRequest;
 import com.ptithcm.apt.dto.response.ApartmentResponse;
 import com.ptithcm.apt.service.ApartmentService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,14 +36,14 @@ public class ApartmentController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/apartment")
-    public ResponseEntity<ApartmentResponse> createApartment(@RequestBody ApartmentRequest request) {
+    public ResponseEntity<ApartmentResponse> createApartment(@Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.createApartment(request));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/apartment/{id}")
-    public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Integer id,
-            @RequestBody ApartmentRequest request) {
+    public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Long id,
+            @Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
 
@@ -50,7 +51,7 @@ public class ApartmentController {
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/apartment/{id}")
-    public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Integer id) {
+    public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Long id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));
     }
 

@@ -89,7 +89,7 @@ public class ApartmentServiceImpl implements ApartmentService {
     }
 
     @Override
-    public ApartmentResponse updateApartment(Integer id, ApartmentRequest apartmentDetails) { // Interface
+    public ApartmentResponse updateApartment(Long id, ApartmentRequest apartmentDetails) { // Interface
         Apartment apartment = apartmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not Found Room ID: " + id));
 
@@ -140,7 +140,7 @@ public class ApartmentServiceImpl implements ApartmentService {
     }
 
     @Override // Thêm Override và sửa kiểu trả về
-    public ApartmentResponse getApartmentById(Integer id) {
+    public ApartmentResponse getApartmentById(Long id) {
         Apartment apartment = apartmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not Found Room ID: " + id));
 
