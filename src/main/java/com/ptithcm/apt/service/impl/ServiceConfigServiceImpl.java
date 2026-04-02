@@ -31,12 +31,14 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
         LocalDate today = LocalDate.now();
         LocalDate startOfNextMonth = today.withDayOfMonth(1).plusMonths(1);
 
-        ServiceConfig currentConfig = serviceConfigRepository.findCurrentConfig(request.serviceCode())
+        LocalDate normalizedEffectiveDate = request.effectiveFrom().withDayOfMonth(1);
+
+        ServiceConfig currentConfig = serviceConfigRepository.findCurrentConfig(request.serviceCode(), today)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy dịch vụ: " + request.serviceCode()));
 
-        if (request.effectiveFrom().isBefore(startOfNextMonth)) {
-            throw new IllegalArgumentException("Ngày áp dụng cho dịch vụ " + request.serviceCode() +
-                    " phải bắt đầu từ " + startOfNextMonth + " trở đi.");
+        if (normalizedEffectiveDate.isBefore(startOfNextMonth)) {
+            throw new IllegalArgumentException("Tháng áp dụng cho dịch vụ " + request.serviceCode() +
+                    " phải bắt đầu từ tháng " + startOfNextMonth.getMonthValue() + "/" + startOfNextMonth.getYear() + " trở đi.");
         }
 
         if (request.newPrice().compareTo(currentConfig.getUnitPrice()) == 0) {
@@ -44,12 +46,12 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
                     " đang được áp dụng mức giá này rồi.");
         }
 
-        Optional<ServiceConfig> upcomingOpt = serviceConfigRepository.findUpcomingConfig(request.serviceCode());
+        Optional<ServiceConfig> upcomingOpt = serviceConfigRepository.findUpcomingConfig(request.serviceCode(), today);
 
         if (upcomingOpt.isPresent()) {
             ServiceConfig upcoming = upcomingOpt.get();
             upcoming.setUnitPrice(request.newPrice());
-            upcoming.setEffectiveFrom(request.effectiveFrom());
+            upcoming.setEffectiveFrom(normalizedEffectiveDate);
 
             serviceConfigRepository.save(upcoming);
         } else {
@@ -58,7 +60,7 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
                     .serviceName(currentConfig.getServiceName())
                     .unit(currentConfig.getUnit())
                     .unitPrice(request.newPrice())
-                    .effectiveFrom(request.effectiveFrom())
+                    .effectiveFrom(normalizedEffectiveDate)
                     .build();
 
             serviceConfigRepository.save(newConfig);
@@ -67,12 +69,13 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
 
     @Override
     public List<AdminServiceConfigResponse> getAdminDashboardPrices() {
-        List<String> serviceCodes = List.of("ELECTRICITY", "WATER", "MANAGEMENT", "SANITATION");
+        List<String> serviceCodes = serviceConfigRepository.findDistinctServiceCodes();
         List<AdminServiceConfigResponse> responses = new ArrayList<>();
+        LocalDate today = LocalDate.now();
 
         for (String code : serviceCodes) {
-            ServiceConfig current = serviceConfigRepository.findCurrentConfig(code).orElse(null);
-            ServiceConfig upcoming = serviceConfigRepository.findUpcomingConfig(code).orElse(null);
+            ServiceConfig current = serviceConfigRepository.findCurrentConfig(code, today).orElse(null);
+            ServiceConfig upcoming = serviceConfigRepository.findUpcomingConfig(code, today).orElse(null);
 
             if (current != null) {
                 responses.add(AdminServiceConfigResponse.builder()
@@ -92,7 +95,7 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
     @Override
     @Transactional
     public void cancelUpcomingUpdate(String serviceCode) {
-        ServiceConfig upcomingConfig = serviceConfigRepository.findUpcomingConfig(serviceCode)
+        ServiceConfig upcomingConfig = serviceConfigRepository.findUpcomingConfig(serviceCode, LocalDate.now())
                 .orElseThrow(() -> new NotFoundException("Không có bản ghi chờ cập nhật nào cho dịch vụ: " + serviceCode));
 
         serviceConfigRepository.delete(upcomingConfig);
