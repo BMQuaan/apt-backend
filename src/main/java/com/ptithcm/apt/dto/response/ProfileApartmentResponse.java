@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public record ProfileApartmentResponse(
         Long apartmentId,
         String roomNumber,
-        Short floor,
+        Integer floor,
         BigDecimal area,
         String role, // OWNER, TENANT, MEMBER
         Boolean isHead,
