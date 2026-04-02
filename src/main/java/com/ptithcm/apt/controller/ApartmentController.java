@@ -17,6 +17,7 @@ import com.ptithcm.apt.dto.request.ApartmentRequest;
 import com.ptithcm.apt.dto.response.ApartmentResponse;
 import com.ptithcm.apt.service.ApartmentService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,14 +36,14 @@ public class ApartmentController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/apartment")
-    public ResponseEntity<ApartmentResponse> createApartment(@RequestBody ApartmentRequest request) {
+    public ResponseEntity<ApartmentResponse> createApartment(@Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.createApartment(request));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/apartment/{id}")
     public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Long id,
-            @RequestBody ApartmentRequest request) {
+            @Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
 
