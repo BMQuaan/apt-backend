@@ -33,8 +33,6 @@ public class ResidentServiceImpl implements ResidentService {
     @Override
     @Transactional
     public void createResidentAndAssignApartment(ResidentRequest request) {
-
-        // 1. Kiểm tra CCCD đã tồn tại chưa
         if (residentRepository.existsByCitizenIdentity(request.getCitizenIdentity())) {
             throw new RuntimeException("Căn cước công dân này đã tồn tại trong hệ thống!");
         }
@@ -86,7 +84,6 @@ public class ResidentServiceImpl implements ResidentService {
                 .build();
         User savedUser = userRepository.save(newUser);
 
-        // Tạo thông tin cá nhân (Resident)
         Resident newResident = Resident.builder()
                 .user(savedUser)
                 .fullName(request.getFullName())
@@ -97,7 +94,6 @@ public class ResidentServiceImpl implements ResidentService {
                 .build();
         Resident savedResident = residentRepository.save(newResident);
 
-        // Gán cư dân vào căn hộ (Ghi vào bảng trung gian resident_apartments)
         ResidentApartment assignment = ResidentApartment.builder()
                 .resident(savedResident)
                 .apartment(apartment)
@@ -114,33 +110,26 @@ public class ResidentServiceImpl implements ResidentService {
     @Override
     @Transactional
     public ResidentResponse updateResident(Long residentId, UpdateResidentRequest request) {
-        // 1. Tìm cư dân
         Resident resident = residentRepository.findById(residentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân!"));
 
-        // 2. Cập nhật các trường cho phép (Thông tin liên lạc & cá nhân)
         resident.setFullName(request.getFullName());
         resident.setPhone(request.getPhone());
         resident.setEmail(request.getEmail());
         resident.setDob(request.getDob());
 
-        // 3. Lưu vào DB
         Resident updatedResident = residentRepository.save(resident);
 
-        // 4. Trả về toàn bộ thông tin cá nhân mới nhất
         return ResidentResponse.builder()
                 .id(updatedResident.getId())
                 .fullName(updatedResident.getFullName())
-                .citizenIdentity(updatedResident.getCitizenIdentity()) // Trả về CCCD cũ
+                .citizenIdentity(updatedResident.getCitizenIdentity())
                 .dob(updatedResident.getDob())
                 .phone(updatedResident.getPhone())
                 .email(updatedResident.getEmail())
                 .build();
     }
 
-    // === TRONG ResidentServiceImpl.java ===
-
-    // 1. LẤY DANH SÁCH (Có phân trang và lọc theo phòng)
     @Override
     @Transactional(readOnly = true)
     public Page<ResidentListResponse> getActiveResidents(String roomNumber, Pageable pageable) {
@@ -165,16 +154,13 @@ public class ResidentServiceImpl implements ResidentService {
                 .build());
     }
 
-    // XÓA/CHUYỂN PHÒNG (Move Out)
     @Override
     @Transactional
     public void moveOutResident(Long residentId, Long apartmentId) {
-        // Lấy bản ghi cư trú đang active
         ResidentApartment ra = residentApartmentRepository
                 .findByResidentIdAndApartmentIdAndIsActiveTrue(residentId, apartmentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin cư trú hợp lệ để chuyển đi!"));
 
-        // Cập nhật trạng thái thành false (đã chuyển đi) và chốt ngày kết thúc
         ra.setIsActive(false);
         ra.setContractEnd(LocalDate.now());
         residentApartmentRepository.save(ra);
@@ -189,9 +175,6 @@ public class ResidentServiceImpl implements ResidentService {
             residentApartmentRepository.saveAll(remainingMembers);
         }
 
-        // Logic cập nhật trạng thái phòng:
-        // Nếu đếm số lượng người ĐANG Ở trong phòng này = 0 -> Đổi status phòng thành
-        // AVAILABLE
         long activeCount = residentApartmentRepository.countByApartmentIdAndIsActiveTrue(apartmentId);
         if (activeCount == 0) {
             Apartment apartment = ra.getApartment();
