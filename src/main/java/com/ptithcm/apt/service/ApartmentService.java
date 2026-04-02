@@ -11,7 +11,7 @@ public interface ApartmentService {
 
     ApartmentResponse createApartment(ApartmentRequest apartmentRequest);
 
-    ApartmentResponse updateApartment(Integer id, ApartmentRequest apartmentRequestDetails);
+    ApartmentResponse updateApartment(Long id, ApartmentRequest apartmentRequestDetails);
 
-    ApartmentResponse getApartmentById(Integer id);
+    ApartmentResponse getApartmentById(Long id);
 }
