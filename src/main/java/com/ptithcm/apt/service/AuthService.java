@@ -11,4 +11,5 @@ public interface AuthService {
     void forgotPassword(ForgotPasswordRequest request);
     String verifyOtp(VerifyOtpRequest request);
     void resetPassword(ResetPasswordRequest request);
+    void changePassword(ChangePasswordRequest request);
 }

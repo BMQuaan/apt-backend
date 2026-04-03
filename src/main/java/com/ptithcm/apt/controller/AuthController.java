@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -55,5 +56,13 @@ public class AuthController {
 
         authService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.success(null, "Đổi mật khẩu thành công. Bạn có thể sử dụng mật khẩu mới để đăng nhập."));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        authService.changePassword(request);
+        return ResponseEntity.ok(ApiResponse.success(null, "Đổi mật khẩu thành công."));
     }
 }

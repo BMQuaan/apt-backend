@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -269,6 +271,31 @@ public class AuthServiceImpl implements AuthService {
         revokeTokensByDeviceType(user, "WEB");
         revokeTokensByDeviceType(user, "MOBILE");
     }
+
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        User user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
+
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        // revokeAllUserTokens(user);
+    }
+
+
 
     private String generateSecureOtp() {
         SecureRandom random = new SecureRandom();
