@@ -5,10 +5,11 @@ import com.ptithcm.apt.entity.Bill;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BillRepository extends JpaRepository<Bill, Long> {
+public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificationExecutor<Bill> {
     Optional<Bill> findByApartmentIdAndBillingMonthAndBillingYear(Long apartmentId, Integer billingMonth,
             Integer billingYear);
 }
