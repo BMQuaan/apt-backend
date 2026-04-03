@@ -1,28 +1,37 @@
 package com.ptithcm.apt.service.impl;
 
-import com.ptithcm.apt.dto.request.LoginRequest;
-import com.ptithcm.apt.dto.request.RefreshTokenRequest;
+import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.TokenResponse;
+import com.ptithcm.apt.entity.Otp;
 import com.ptithcm.apt.entity.Token;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.exception.NotFoundException;
+import com.ptithcm.apt.repository.OtpRepository;
 import com.ptithcm.apt.repository.TokenRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.service.AuthService;
+import com.ptithcm.apt.service.EmailService;
 import com.ptithcm.apt.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +41,9 @@ public class AuthServiceImpl implements AuthService {
     private final TokenRepository tokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
+    private final OtpRepository otpRepository;
 
     @Value("${app.jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
@@ -153,5 +165,119 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         return "WEB";
+    }
+
+    //=====================================================
+
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        String email = request.email();
+        userRepository.findByUsername(email)
+                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
+
+        // 3 lần / 30p
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusMinutes(30);
+        long requestCount = otpRepository.countByEmailAndCreatedAtAfter(email, oneHourAgo);
+        if (requestCount >= 3) {
+            throw new RuntimeException("Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau 30 phút.");
+        }
+
+        otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(email)
+                .ifPresent(oldOtp -> {
+                    oldOtp.setIsRevoked(true);
+                    otpRepository.save(oldOtp);
+                });
+
+        String plainOtp = generateSecureOtp();
+
+        Otp newOtp = Otp.builder()
+                .email(email)
+                .otpHash(passwordEncoder.encode(plainOtp))
+                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .build();
+        otpRepository.save(newOtp);
+
+        Map<String, String> templateModel = new HashMap<>();
+        templateModel.put("OTP_CODE", plainOtp);
+        emailService.sendHtmlEmail(email, "Mã OTP Khôi Phục Mật Khẩu - APT", "otp-email.html", templateModel);
+    }
+
+    @Override
+    @Transactional
+    public String verifyOtp(VerifyOtpRequest request) {
+
+        userRepository.findByUsername(request.email())
+                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
+
+        Otp activeOtp = otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(request.email())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu hoặc OTP đã bị hủy."));
+
+        if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+            activeOtp.setIsRevoked(true);
+            otpRepository.save(activeOtp);
+            throw new RuntimeException("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.");
+        }
+
+        // Check Hash & Anti Brute-Force
+        if (!passwordEncoder.matches(request.otp(), activeOtp.getOtpHash())) {
+            activeOtp.setAttemptCount(activeOtp.getAttemptCount() + 1);
+            if (activeOtp.getAttemptCount() >= 5) {
+                activeOtp.setIsRevoked(true);
+                otpRepository.save(activeOtp);
+                throw new RuntimeException("Nhập sai quá 5 lần. Yêu cầu khôi phục mật khẩu đã bị hủy.");
+            }
+            otpRepository.save(activeOtp);
+            throw new RuntimeException("Mã OTP không chính xác. Bạn còn " + (5 - activeOtp.getAttemptCount()) + " lần thử.");
+        }
+
+        String rawResetToken = "reset_" + UUID.randomUUID().toString();
+        String hashedResetToken = hashToken(rawResetToken);
+        activeOtp.setResetToken(hashedResetToken);
+        activeOtp.setExpiresAt(LocalDateTime.now().plusMinutes(10)); // Cho thêm 10 phút để gõ pass mới
+        otpRepository.save(activeOtp);
+
+        return rawResetToken;
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+
+        String hashedTokenFromUser = hashToken(request.resetToken());
+
+        Otp activeOtp = otpRepository.findByResetTokenAndIsUsedFalseAndIsRevokedFalse(hashedTokenFromUser)
+                .orElseThrow(() -> new RuntimeException("Phiên làm việc không hợp lệ hoặc đã bị hủy."));
+
+        if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+            activeOtp.setIsRevoked(true);
+            otpRepository.save(activeOtp);
+            throw new RuntimeException("Phiên làm việc đã hết hạn. Vui lòng thử lại từ đầu.");
+        }
+
+        User user = userRepository.findByUsername(activeOtp.getEmail())
+                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        activeOtp.setIsUsed(true);
+        activeOtp.setIsRevoked(true);
+        otpRepository.save(activeOtp);
+
+        revokeTokensByDeviceType(user, "WEB");
+        revokeTokensByDeviceType(user, "MOBILE");
+    }
+
+    private String generateSecureOtp() {
+        SecureRandom random = new SecureRandom();
+        int otp = 100000 + random.nextInt(900000);
+        return String.valueOf(otp);
+    }
+
+    //SHA256
+    private String hashResetToken(String token) {
+        return DigestUtils.md5DigestAsHex(token.getBytes(StandardCharsets.UTF_8));
     }
 }
