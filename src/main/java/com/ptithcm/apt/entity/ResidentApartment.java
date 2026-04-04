@@ -2,6 +2,8 @@ package com.ptithcm.apt.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -30,6 +32,12 @@ public class ResidentApartment {
 
     @Column(nullable = false, length = 20)
     private String role; // OWNER, TENANT, MEMBER
+
+    @Column(name = "rental_price", precision = 12, scale = 2)
+    private BigDecimal rentalPrice;
+
+    @Column(name = "deposit_amount", precision = 12, scale = 2)
+    private BigDecimal depositAmount;
 
     @Column(name = "is_head")
     @Builder.Default

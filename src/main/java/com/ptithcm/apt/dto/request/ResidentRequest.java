@@ -2,6 +2,8 @@ package com.ptithcm.apt.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -16,6 +18,8 @@ public class ResidentRequest {
 
     // 2. Thông tin nơi ở (Ghi vào bảng ResidentApartment)
     private Long apartmentId;
+    private BigDecimal rentalPrice;
+    private BigDecimal depositAmount;
     private String role; // "OWNER" (Chủ nhà), "TENANT" (Người thuê), "MEMBER" (Thành viên)
     private Boolean isHead; // Có phải chủ hộ không?
     private LocalDate contractStart;
