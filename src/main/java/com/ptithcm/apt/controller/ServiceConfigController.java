@@ -22,17 +22,17 @@ public class ServiceConfigController {
 
     private final ServiceConfigService serviceConfigService;
 
-    @PostMapping("/update-prices")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/update-price")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> updatePrices(
             @Valid @RequestBody ServicePriceUpdateRequest request) {
 
-        serviceConfigService.updateServicePrices(request);
+        serviceConfigService.updateServicePrice(request);
         return ResponseEntity.ok(ApiResponse.success(null, "Cập nhật giá dịch vụ thành công"));
     }
 
     @GetMapping("/admin-dashboard")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<AdminServiceConfigResponse>>> getAdminDashboardPrices() {
 
         List<AdminServiceConfigResponse> prices = serviceConfigService.getAdminDashboardPrices();

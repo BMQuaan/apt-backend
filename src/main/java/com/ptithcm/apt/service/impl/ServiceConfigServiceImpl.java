@@ -27,64 +27,55 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
 
     @Override
     @Transactional
-    public void updateServicePrices(ServicePriceUpdateRequest request) {
+    public void updateServicePrice(ServicePriceUpdateRequest request) {
         LocalDate today = LocalDate.now();
         LocalDate startOfNextMonth = today.withDayOfMonth(1).plusMonths(1);
 
-        List<ServiceConfig> configsToSave = new ArrayList<>();
+        LocalDate normalizedEffectiveDate = request.effectiveFrom().withDayOfMonth(1);
 
-        for (ServicePriceUpdateRequest.ServicePrice priceReq : request.prices()) {
+        ServiceConfig currentConfig = serviceConfigRepository.findCurrentConfig(request.serviceCode(), today)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy dịch vụ: " + request.serviceCode()));
 
-            ServiceConfig currentConfig = serviceConfigRepository.findCurrentConfig(priceReq.serviceCode())
-                    .orElseThrow(() -> new NotFoundException("Không tìm thấy dịch vụ: " + priceReq.serviceCode()));
-
-            // Chỉ cho phép áp dụng từ "ít nhất tháng sau"
-            if (priceReq.effectiveFrom().isBefore(startOfNextMonth)) {
-                throw new IllegalArgumentException("Ngày áp dụng cho dịch vụ " + priceReq.serviceCode() +
-                        " phải bắt đầu từ " + startOfNextMonth + " trở đi.");
-            }
-
-            // Không cho update bằng giá hiện tại
-            if (priceReq.newPrice().compareTo(currentConfig.getUnitPrice()) == 0) {
-                    throw new IllegalArgumentException("Dịch vụ " + priceReq.serviceCode() +
-                            " đang được áp dụng mức giá này rồi.");
-            }
-
-            // XỬ LÝ UPDATE CHO TƯƠNG LAI
-            Optional<ServiceConfig> upcomingOpt = serviceConfigRepository.findUpcomingConfig(priceReq.serviceCode());
-
-            if (upcomingOpt.isPresent()) {
-                // Đã có 1 bản ghi chờ -> Cập nhật đè lên nó
-                ServiceConfig upcoming = upcomingOpt.get();
-                upcoming.setUnitPrice(priceReq.newPrice());
-                upcoming.setEffectiveFrom(priceReq.effectiveFrom());
-                configsToSave.add(upcoming);
-            } else {
-                // Chưa có bản ghi chờ -> Tạo 1 bản ghi tương lai mới
-                ServiceConfig newConfig = ServiceConfig.builder()
-                        .serviceCode(currentConfig.getServiceCode())
-                        .serviceName(currentConfig.getServiceName())
-                        .unit(currentConfig.getUnit())
-                        .unitPrice(priceReq.newPrice())
-                        .effectiveFrom(priceReq.effectiveFrom())
-                        .build();
-                configsToSave.add(newConfig);
-            }
+        if (normalizedEffectiveDate.isBefore(startOfNextMonth)) {
+            throw new IllegalArgumentException("Tháng áp dụng cho dịch vụ " + request.serviceCode() +
+                    " phải bắt đầu từ tháng " + startOfNextMonth.getMonthValue() + "/" + startOfNextMonth.getYear() + " trở đi.");
         }
 
-        if (!configsToSave.isEmpty()) {
-            serviceConfigRepository.saveAll(configsToSave);
+        if (request.newPrice().compareTo(currentConfig.getUnitPrice()) == 0) {
+            throw new IllegalArgumentException("Dịch vụ " + request.serviceCode() +
+                    " đang được áp dụng mức giá này rồi.");
+        }
+
+        Optional<ServiceConfig> upcomingOpt = serviceConfigRepository.findUpcomingConfig(request.serviceCode(), today);
+
+        if (upcomingOpt.isPresent()) {
+            ServiceConfig upcoming = upcomingOpt.get();
+            upcoming.setUnitPrice(request.newPrice());
+            upcoming.setEffectiveFrom(normalizedEffectiveDate);
+
+            serviceConfigRepository.save(upcoming);
+        } else {
+            ServiceConfig newConfig = ServiceConfig.builder()
+                    .serviceCode(currentConfig.getServiceCode())
+                    .serviceName(currentConfig.getServiceName())
+                    .unit(currentConfig.getUnit())
+                    .unitPrice(request.newPrice())
+                    .effectiveFrom(normalizedEffectiveDate)
+                    .build();
+
+            serviceConfigRepository.save(newConfig);
         }
     }
 
     @Override
     public List<AdminServiceConfigResponse> getAdminDashboardPrices() {
-        List<String> serviceCodes = List.of("ELECTRICITY", "WATER", "MANAGEMENT", "SANITATION");
+        List<String> serviceCodes = serviceConfigRepository.findDistinctServiceCodes();
         List<AdminServiceConfigResponse> responses = new ArrayList<>();
+        LocalDate today = LocalDate.now();
 
         for (String code : serviceCodes) {
-            ServiceConfig current = serviceConfigRepository.findCurrentConfig(code).orElse(null);
-            ServiceConfig upcoming = serviceConfigRepository.findUpcomingConfig(code).orElse(null);
+            ServiceConfig current = serviceConfigRepository.findCurrentConfig(code, today).orElse(null);
+            ServiceConfig upcoming = serviceConfigRepository.findUpcomingConfig(code, today).orElse(null);
 
             if (current != null) {
                 responses.add(AdminServiceConfigResponse.builder()
@@ -104,7 +95,7 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
     @Override
     @Transactional
     public void cancelUpcomingUpdate(String serviceCode) {
-        ServiceConfig upcomingConfig = serviceConfigRepository.findUpcomingConfig(serviceCode)
+        ServiceConfig upcomingConfig = serviceConfigRepository.findUpcomingConfig(serviceCode, LocalDate.now())
                 .orElseThrow(() -> new NotFoundException("Không có bản ghi chờ cập nhật nào cho dịch vụ: " + serviceCode));
 
         serviceConfigRepository.delete(upcomingConfig);

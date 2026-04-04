@@ -10,6 +10,7 @@ import com.ptithcm.apt.dto.response.CreateBillResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
+import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.service.BillService;
 
 import jakarta.validation.Valid;
@@ -18,13 +19,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-
-
 
 import com.ptithcm.apt.dto.response.PageResponse;
 
@@ -35,21 +37,27 @@ public class BillController {
     private final BillService billService;
 
     @PostMapping("/admin/bills")
-    public ResponseEntity<ApiResponse<CreateBillResponse>> createBill(@Valid @RequestBody BillRequest req){       
+    public ResponseEntity<ApiResponse<CreateBillResponse>> createBill(@Valid @RequestBody BillRequest req) {
         CreateBillResponse res = billService.createBill(req);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully created bill"));
     }
 
     @PostMapping("/admin/bills/{billId}/update-status")
-    public ResponseEntity<ApiResponse<UpdateBillStatusResponse>> updateBillStatus( @PathVariable Long billId, @RequestBody UpdateBillStatusRequest req) {
+    public ResponseEntity<ApiResponse<UpdateBillStatusResponse>> updateBillStatus(@PathVariable Long billId,
+            @RequestBody UpdateBillStatusRequest req) {
         UpdateBillStatusResponse res = billService.updateBillStatus(billId, req);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully updated bill status"));
     }
 
     @GetMapping("/admin/bills")
-    public ResponseEntity<ApiResponse<PageResponse<GetBillsByAdminResponse>>> getBillsByAdmin(Pageable pageable) {
-        Page<GetBillsByAdminResponse> bills = billService.getBillsByAdmin(pageable);
+    public ResponseEntity<ApiResponse<PageResponse<GetBillsByAdminResponse>>> getBillsByAdmin(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Long apartmentId,
+            @RequestParam(required = false) BillStatus status,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
+        Page<GetBillsByAdminResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
     }
-   
+
 }

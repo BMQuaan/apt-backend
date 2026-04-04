@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ServiceConfigService {
-    public void updateServicePrices(ServicePriceUpdateRequest request);
+    public void updateServicePrice(ServicePriceUpdateRequest request);
     public List<AdminServiceConfigResponse> getAdminDashboardPrices();
     public void cancelUpcomingUpdate(String serviceCode);
     public List<ServiceConfigResponse> getPricesByDate(LocalDate targetDate);
