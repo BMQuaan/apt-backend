@@ -28,19 +28,19 @@ public class ApartmentController {
 
     private final ApartmentService apartmentService;
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/apartment")
     public ResponseEntity<List<ApartmentResponse>> getAllApartments() {
         return ResponseEntity.ok(apartmentService.getAllApartments());
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/apartment")
     public ResponseEntity<ApartmentResponse> createApartment(@Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.createApartment(request));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/apartment/{id}")
     public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Long id,
             @Valid @RequestBody ApartmentRequest request) {
@@ -49,7 +49,7 @@ public class ApartmentController {
 
     // Chi tiết admin
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/apartment/{id}")
     public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Long id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));

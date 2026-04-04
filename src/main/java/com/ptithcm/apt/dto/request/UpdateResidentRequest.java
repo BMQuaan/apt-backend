@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 public class UpdateResidentRequest {
     @NotBlank(message = "Họ và tên không được để trống!")
     private String fullName;
+    private String citizenIdentity;
     private String phone;
     private String email;
     private LocalDate dob;

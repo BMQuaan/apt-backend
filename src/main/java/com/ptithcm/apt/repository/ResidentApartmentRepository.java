@@ -30,4 +30,6 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
     boolean existsByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId);
 
     boolean existsByResidentIdAndIsActiveTrue(Long residentId);
+
+    Optional<ResidentApartment> findByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId);
 }
