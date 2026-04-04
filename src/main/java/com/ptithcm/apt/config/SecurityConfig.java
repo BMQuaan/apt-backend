@@ -29,68 +29,67 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final AuthenticationProvider authenticationProvider;
-    private final LogoutHandler logoutHandler;
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final AuthenticationProvider authenticationProvider;
+        private final LogoutHandler logoutHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        // admin APIs
-                        .requestMatchers(HttpMethod.POST, "/api/admin/**").hasAuthority("ADMIN")
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(Customizer.withDefaults())
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .authorizeHttpRequests(auth -> auth
+                                                // admin APIs
+                                                // .requestMatchers(HttpMethod.POST,
+                                                // "/api/admin/**").hasAuthority("ADMIN")
 
-                        // Auth endpoints
-                        .requestMatchers(SecurityWhitelist.AUTH_WHITELIST).permitAll()
+                                                // Auth endpoints
+                                                .requestMatchers(SecurityWhitelist.AUTH_WHITELIST).permitAll()
 
-//                        // Public GET endpoints
-//                        .requestMatchers(HttpMethod.GET, SecurityWhitelist.PUBLIC_GET_ENDPOINTS).permitAll()
+                                                // // Public GET endpoints
+                                                // .requestMatchers(HttpMethod.GET,
+                                                // SecurityWhitelist.PUBLIC_GET_ENDPOINTS).permitAll()
 
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .logout(logout ->
-                        logout.logoutUrl("/api/v1/auth/logout")
-                                .addLogoutHandler(logoutHandler)
-                                .logoutSuccessHandler((request, response, authentication) -> {
-                                    SecurityContextHolder.clearContext();
-                                    response.setStatus(HttpServletResponse.SC_OK);
-                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                    response.setCharacterEncoding("UTF-8");
-                                    ApiResponse<Void> apiResponse = ApiResponse.success(
-                                            null,
-                                            "Đăng xuất thành công"
-                                    );
-                                    response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
-                                })
-                )
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.setCharacterEncoding("UTF-8");
-                            ApiResponse<Void> apiResponse = ApiResponse.error(
-                                    HttpServletResponse.SC_UNAUTHORIZED,
-                                    "Bạn cần đăng nhập để truy cập tài nguyên này."
-                            );
-                            response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.setCharacterEncoding("UTF-8");
-                            ApiResponse<Void> apiResponse = ApiResponse.error(
-                                    HttpServletResponse.SC_FORBIDDEN,
-                                    "Bạn không có quyền truy cập tài nguyên này."
-                            );
-                            response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
-                        })
-                );
+                                                .anyRequest().authenticated())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authenticationProvider(authenticationProvider)
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                                .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
+                                                .addLogoutHandler(logoutHandler)
+                                                .logoutSuccessHandler((request, response, authentication) -> {
+                                                        SecurityContextHolder.clearContext();
+                                                        response.setStatus(HttpServletResponse.SC_OK);
+                                                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                                        response.setCharacterEncoding("UTF-8");
+                                                        ApiResponse<Void> apiResponse = ApiResponse.success(
+                                                                        null,
+                                                                        "Đăng xuất thành công");
+                                                        response.getWriter().write(new ObjectMapper()
+                                                                        .writeValueAsString(apiResponse));
+                                                }))
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                                        response.setCharacterEncoding("UTF-8");
+                                                        ApiResponse<Void> apiResponse = ApiResponse.error(
+                                                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                                                        "Bạn cần đăng nhập để truy cập tài nguyên này.");
+                                                        response.getWriter().write(new ObjectMapper()
+                                                                        .writeValueAsString(apiResponse));
+                                                })
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                                        response.setCharacterEncoding("UTF-8");
+                                                        ApiResponse<Void> apiResponse = ApiResponse.error(
+                                                                        HttpServletResponse.SC_FORBIDDEN,
+                                                                        "Bạn không có quyền truy cập tài nguyên này.");
+                                                        response.getWriter().write(new ObjectMapper()
+                                                                        .writeValueAsString(apiResponse));
+                                                }));
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

@@ -39,12 +39,15 @@ public class ServiceConfigController {
         return ResponseEntity.ok(ApiResponse.success(prices, "Lấy danh sách bảng giá Dashboard thành công"));
     }
 
-//    @GetMapping("/current-prices")
-//    public ResponseEntity<ApiResponse<List<ServiceConfigResponse>>> getCurrentPrices() {
-//
-//        List<ServiceConfigResponse> prices = serviceConfigService.getPricesByDate(LocalDate.now());
-//        return ResponseEntity.ok(ApiResponse.success(prices, "Lấy bảng giá hiện tại thành công"));
-//    }
+    // @GetMapping("/current-prices")
+    // public ResponseEntity<ApiResponse<List<ServiceConfigResponse>>>
+    // getCurrentPrices() {
+    //
+    // List<ServiceConfigResponse> prices =
+    // serviceConfigService.getPricesByDate(LocalDate.now());
+    // return ResponseEntity.ok(ApiResponse.success(prices, "Lấy bảng giá hiện tại
+    // thành công"));
+    // }
 
     @DeleteMapping("/cancel-update/{serviceCode}")
     @PreAuthorize("hasRole('ADMIN')")
