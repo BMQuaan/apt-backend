@@ -36,7 +36,7 @@ public class TestController {
             throw new RuntimeException("Tên đăng nhập (username) đã tồn tại!");
         }
 
-        Role defaultRole = roleRepository.findByRoleName("USER")
+        Role defaultRole = roleRepository.findByRoleName("ROLE_USER")
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy Role: RESIDENT trong hệ thống. Vui lòng chạy script SQL."));
 
         User newUser = User.builder()

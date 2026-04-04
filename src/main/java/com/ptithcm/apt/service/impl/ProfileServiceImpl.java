@@ -124,7 +124,7 @@ public class ProfileServiceImpl implements ProfileService {
             for (ResidentApartment aptRes : aptResidents) {
                 if (aptRes.getResident().getId().equals(resident.getId())) continue;
 
-                boolean isAlreadyAdded = familyMembers.stream()
+                    boolean isAlreadyAdded = familyMembers.stream()
                         .anyMatch(member -> member.residentId().equals(aptRes.getResident().getId()));
 
                 if (!isAlreadyAdded) {

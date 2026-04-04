@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mã Xác Thực (OTP) - APT</title>
+    <style>
+        /* CSS Reset & Cấu hình cơ bản */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        /* Khung chứa email chính */
+        .email-wrapper {
+            width: 100%;
+            background-color: #f7f7f7;
+            padding: 40px 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Phần Header */
+        .header {
+            padding: 35px 30px;
+            text-align: center;
+            border-bottom: 3px solid transparent;
+            background: linear-gradient(white, white) padding-box,
+            linear-gradient(90deg, #e67182, #eb959d) border-box;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #e67182;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            color: #888888;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Phần Nội dung */
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .greeting {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #222222;
+        }
+
+        /* Khung hiển thị OTP */
+        .otp-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .otp-box {
+            display: inline-block;
+            background-color: #fff8f9;
+            border: 1px dashed #eb959d;
+            border-radius: 8px;
+            padding: 20px 40px;
+        }
+
+        .otp-code {
+            margin: 0;
+            font-size: 38px;
+            font-weight: 700;
+            color: #e67182;
+            letter-spacing: 10px;
+        }
+
+        .otp-timer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #e67182;
+            font-weight: 500;
+        }
+
+        /* Cảnh báo bảo mật */
+        .security-notice {
+            background-color: #fafafa;
+            border-left: 4px solid #eb959d;
+            padding: 15px 20px;
+            font-size: 14px;
+            color: #666666;
+            margin-top: 30px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Phần Footer */
+        .footer {
+            background-color: #ffffff;
+            padding: 25px 30px;
+            text-align: center;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .footer p {
+            margin: 0 0 8px 0;
+            color: #999999;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .footer a {
+            color: #e67182;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Responsive cho thiết bị di động */
+        @media only screen and (max-width: 600px) {
+            .email-wrapper {
+                padding: 20px 10px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .otp-box {
+                padding: 15px 20px;
+            }
+            .otp-code {
+                font-size: 32px;
+                letter-spacing: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-wrapper">
+    <table role="presentation">
+        <tr>
+            <td align="center">
+                <div class="email-container">
+                    <div class="header">
+                        <h1>APT</h1>
+                        <p>Quản Lý Dân Cư</p>
+                    </div>
+
+                    <div class="content">
+                        <div class="greeting">Xin chào Quý cư dân,</div>
+                        <p>Bạn vừa yêu cầu mã xác thực (OTP) để thực hiện khôi phục mật khẩu trên ứng dụng quản lý dân cư <strong>APT</strong>. Dưới đây là mã xác thực của bạn:</p>
+
+                        <div class="otp-container">
+                            <div class="otp-box">
+                                <h2 class="otp-code">{{OTP_CODE}}</h2>
+                            </div>
+                            <div class="otp-timer">Mã này sẽ hết hạn sau 5 phút.</div>
+                        </div>
+
+                        <p>Để đảm bảo an toàn cho tài khoản, vui lòng <strong>không chia sẻ</strong> mã này cho bất kỳ ai, kể cả nhân viên Ban quản lý tòa nhà.</p>
+
+                        <div class="security-notice">
+                            <strong>Lưu ý:</strong> Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này hoặc liên hệ ngay với Ban quản lý qua ứng dụng để được hỗ trợ bảo mật.
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <p>Email này được gửi tự động từ hệ thống <strong>APT</strong>. Vui lòng không trả lời email này.</p>
+                        <p>Cần hỗ trợ? Truy cập <a href="#">Trung tâm trợ giúp</a> hoặc liên hệ Hotline: <strong>1900 xxxx</strong></p>
+                        <p>&copy; 2026 APT - Nền tảng quản lý dân cư thông minh.</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
