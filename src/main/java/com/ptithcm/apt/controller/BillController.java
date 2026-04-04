@@ -8,8 +8,11 @@ import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.ApiResponse;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
+import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
+import com.ptithcm.apt.dto.response.GetMyBillsResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
+import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.service.BillService;
 
@@ -24,6 +27,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,6 +62,24 @@ public class BillController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<GetBillsByAdminResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
+    }
+
+    @GetMapping("/bills/my-bills")
+    public ResponseEntity<ApiResponse<PageResponse<GetMyBillsResponse>>> getMyBills(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Long apartmentId,
+            @RequestParam(required = false) BillStatus status,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
+        Page<GetMyBillsResponse> bills = billService.getMyBills(month, year, apartmentId, status, pageable);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched my bills"));
+    }
+
+    @GetMapping("/bills/my-bills/{billId}")
+    public ResponseEntity<ApiResponse<GetMyBillDetailByIdResponse>> getMyBillDetailById(
+            @PathVariable Long billId) {
+        GetMyBillDetailByIdResponse res = billService.getMyBillDetailById(billId);
+        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched bill"));
     }
 
 }

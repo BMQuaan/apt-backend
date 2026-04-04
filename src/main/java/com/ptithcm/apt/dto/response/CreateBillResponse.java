@@ -25,7 +25,6 @@ public class CreateBillResponse {
     private BigDecimal electricityFee;
     private BigDecimal waterFee;
     private BigDecimal managementFee;
-    private BigDecimal safetyFee;
     private BigDecimal sanitationFee;
     private BigDecimal totalAmount;
     private BillStatus status;

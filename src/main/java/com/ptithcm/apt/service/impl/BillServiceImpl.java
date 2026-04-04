@@ -12,14 +12,19 @@ import com.ptithcm.apt.dto.request.BillRequest;
 import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
+import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
+import com.ptithcm.apt.dto.response.GetMyBillsResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
+import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.mappers.BillMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
+import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.BillSpecifications;
 import com.ptithcm.apt.service.BillService;
+import com.ptithcm.apt.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +34,7 @@ public class BillServiceImpl implements BillService {
 
     private final BillRepository billRepository;
     private final ApartmentRepository apartmentRepository;
+    private final UserRepository userRepository;
     private final BillMapper billMapper;
 
     @Override
@@ -52,20 +58,7 @@ public class BillServiceImpl implements BillService {
                 .build();
         billRepository.save(bill);
 
-        return CreateBillResponse.builder()
-                .id(bill.getId())
-                .apartment(bill.getApartment().getId())
-                .apartmentName(bill.getApartment().getRoomNumber())
-                .billingMonth(bill.getBillingMonth())
-                .billingYear(bill.getBillingYear())
-                .electricityFee(bill.getElectricityFee())
-                .waterFee(bill.getWaterFee())
-                .managementFee(bill.getManagementFee())
-                .sanitationFee(bill.getSanitationFee())
-                .totalAmount(bill.getTotalAmount())
-                .status(bill.getStatus())
-                .createdAt(bill.getCreatedAt())
-                .build();
+        return billMapper.toCreateBillResponse(bill);
     }
 
     @Override
@@ -85,21 +78,7 @@ public class BillServiceImpl implements BillService {
         }
         billRepository.save(bill);
 
-        return UpdateBillStatusResponse.builder()
-                .id(bill.getId())
-                .apartment(bill.getApartment().getId())
-                .apartmentName(bill.getApartment().getRoomNumber())
-                .billingMonth(bill.getBillingMonth())
-                .billingYear(bill.getBillingYear())
-                .electricityFee(bill.getElectricityFee())
-                .waterFee(bill.getWaterFee())
-                .managementFee(bill.getManagementFee())
-                .sanitationFee(bill.getSanitationFee())
-                .totalAmount(bill.getTotalAmount())
-                .status(bill.getStatus())
-                .createdAt(bill.getCreatedAt())
-                .paidAt(bill.getPaidAt())
-                .build();
+        return billMapper.toUpdateBillStatusResponse(bill);
     }
 
     @Override
@@ -108,6 +87,29 @@ public class BillServiceImpl implements BillService {
         Specification<Bill> spec = BillSpecifications.hasFilters(month, year, apartmentId, status);
         Page<Bill> bills = billRepository.findAll(spec, pageable);
         return bills.map(billMapper::toGetBillsByAdminResponse);
+    }
+
+    @Override
+    public Page<GetMyBillsResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
+            Pageable pageable) {
+        String userName = SecurityUtils.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Long currentUserId = currentUser.getId();
+        Page<Bill> bills = billRepository.findMyBills(currentUserId, apartmentId, month, year, status, pageable);
+        return bills.map(billMapper::toGetMyBillsResponse);
+    }
+
+    @Override
+    public GetMyBillDetailByIdResponse getMyBillDetailById(Long id) {
+        String userName = SecurityUtils.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Long currentUserId = currentUser.getId();
+        Bill bill = billRepository.findByIdAndUserId(id, currentUserId)
+                .orElseThrow(() -> new RuntimeException("Bill not found or you don't have permission to view it"));
+
+        return billMapper.toGetMyBillDetailByIdResponse(bill);
     }
 
 }

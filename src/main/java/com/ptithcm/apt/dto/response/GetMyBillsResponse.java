@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class GetBillsByAdminResponse {
+public class GetMyBillsResponse {
     private Long id;
-    private String apartmentName;   
+    private String apartmentName;
     private Integer billingMonth;
     private Integer billingYear;
     private BigDecimal electricityFee;
