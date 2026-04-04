@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.ptithcm.apt.dto.request.ContractRequest;
+import com.ptithcm.apt.dto.request.MemberRequest;
 import com.ptithcm.apt.dto.request.ResidentRequest;
 import com.ptithcm.apt.dto.request.UpdateResidentRequest;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
@@ -19,6 +21,10 @@ public interface ResidentService {
 
     void moveOutResident(Long residentId, Long apartmentId);
 
-    void createResidentAndAssignApartment(ResidentRequest request);
+    // void createResidentAndAssignApartment(ResidentRequest request);
+
+    ResidentResponse addMemberToApartment(Long apartmentId, MemberRequest request);
+
+    List<ResidentListResponse> getResidentsByApartment(Long apartmentId);
 
 }
