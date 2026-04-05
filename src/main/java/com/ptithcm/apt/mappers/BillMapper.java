@@ -17,10 +17,13 @@ public interface BillMapper {
 
     @Mapping(source = "apartment.id", target = "apartment")
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")
+    @Mapping(source = "createdBy.username", target = "createdBy")
     CreateBillResponse toCreateBillResponse(Bill bill);
 
     @Mapping(source = "apartment.id", target = "apartment")
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")
+    @Mapping(source = "createdBy.username", target = "createdBy")
+    @Mapping(source = "confirmedBy.username", target = "confirmedBy")
     UpdateBillStatusResponse toUpdateBillStatusResponse(Bill bill);
 
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")

@@ -28,5 +28,6 @@ public class CreateBillResponse {
     private BigDecimal sanitationFee;
     private BigDecimal totalAmount;
     private BillStatus status;
+    private String createdBy;
     private LocalDateTime createdAt;
 }

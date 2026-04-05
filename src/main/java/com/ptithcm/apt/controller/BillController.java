@@ -27,6 +27,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,12 +41,14 @@ import com.ptithcm.apt.dto.response.PageResponse;
 public class BillController {
     private final BillService billService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/bills")
     public ResponseEntity<ApiResponse<CreateBillResponse>> createBill(@Valid @RequestBody BillRequest req) {
         CreateBillResponse res = billService.createBill(req);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully created bill"));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/bills/{billId}/update-status")
     public ResponseEntity<ApiResponse<UpdateBillStatusResponse>> updateBillStatus(@PathVariable Long billId,
             @RequestBody UpdateBillStatusRequest req) {
@@ -53,6 +56,7 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully updated bill status"));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/bills")
     public ResponseEntity<ApiResponse<PageResponse<GetBillsByAdminResponse>>> getBillsByAdmin(
             @RequestParam(required = false) Integer month,

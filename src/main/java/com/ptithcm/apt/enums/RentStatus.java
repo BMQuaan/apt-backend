@@ -1,5 +1,5 @@
 package com.ptithcm.apt.enums;
 
-public enum BillStatus {
+public enum RentStatus {
     UNPAID, PAID, LATE
 }
