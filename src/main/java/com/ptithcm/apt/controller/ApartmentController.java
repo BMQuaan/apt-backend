@@ -2,6 +2,7 @@ package com.ptithcm.apt.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ptithcm.apt.dto.request.ApartmentRequest;
@@ -30,8 +32,9 @@ public class ApartmentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/apartment")
-    public ResponseEntity<List<ApartmentResponse>> getAllApartments() {
-        return ResponseEntity.ok(apartmentService.getAllApartments());
+    public ResponseEntity<Page<ApartmentResponse>> getAllApartments(@RequestParam(defaultValue = "0") int page) {
+        Page<ApartmentResponse> responses = apartmentService.getAllApartments(page);
+        return ResponseEntity.ok(responses);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -50,6 +53,12 @@ public class ApartmentController {
     // Chi tiết admin
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/apartment/search")
+    public ResponseEntity<List<ApartmentResponse>> searchApartmentsByRoomNumber(@RequestParam String keyword) {
+        return ResponseEntity.ok(apartmentService.searchApartmentsByRoomNumber(keyword));
+    }
+
+    // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @GetMapping("/apartment/{id}")
     public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Long id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng cư dân mới - APT</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f7f7f7; -webkit-font-smoothing: antialiased; }
+        table { border-spacing: 0; border-collapse: collapse; width: 100%; }
+        .email-wrapper { width: 100%; background-color: #f7f7f7; padding: 40px 0; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04); }
+        .header { padding: 35px 30px; text-align: center; border-bottom: 3px solid transparent; background: linear-gradient(white, white) padding-box, linear-gradient(90deg, #e67182, #eb959d) border-box; }
+        .header h1 { margin: 0; color: #e67182; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0 0; color: #888888; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; }
+        .content { padding: 40px 30px; color: #333333; font-size: 16px; line-height: 1.6; }
+        .greeting { font-weight: 600; font-size: 18px; margin-bottom: 15px; color: #222222; }
+        
+        /* Box chứa thông tin tài khoản */
+        .account-info-box { background-color: #fff8f9; border: 1px solid #eb959d; border-radius: 8px; padding: 25px; margin: 25px 0; }
+        .info-row { margin-bottom: 15px; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-label { font-size: 14px; color: #888888; margin-bottom: 5px; display: block; }
+        .info-value { font-size: 18px; font-weight: 600; color: #e67182; }
+        .password-value { font-family: monospace; font-size: 20px; letter-spacing: 2px; }
+        
+        .security-notice { background-color: #fafafa; border-left: 4px solid #eb959d; padding: 15px 20px; font-size: 14px; color: #666666; margin-top: 30px; border-radius: 0 4px 4px 0; }
+        .footer { background-color: #ffffff; padding: 25px 30px; text-align: center; border-top: 1px solid #eeeeee; }
+        .footer p { margin: 0 0 8px 0; color: #999999; font-size: 13px; line-height: 1.5; }
+        .footer a { color: #e67182; text-decoration: none; font-weight: 500; }
+    </style>
+</head>
+<body>
+<div class="email-wrapper">
+    <table role="presentation">
+        <tr>
+            <td align="center">
+                <div class="email-container">
+                    <div class="header">
+                        <h1>APT</h1>
+                        <p>Quản Lý Dân Cư</p>
+                    </div>
+
+                    <div class="content">
+                        <div class="greeting">Xin chào {{FULL_NAME}},</div>
+                        <p>Ban quản lý tòa nhà chân thành cảm ơn bạn đã lựa chọn sinh sống tại căn hộ <strong>{{ROOM_NUMBER}}</strong>. Chúc bạn và gia đình có những trải nghiệm tuyệt vời tại đây!</p>
+                        <p>Để thuận tiện cho việc nhận thông báo, đóng phí dịch vụ và liên hệ với Ban quản lý, hệ thống đã tự động tạo cho bạn một tài khoản cư dân. Dưới đây là thông tin đăng nhập của bạn:</p>
+
+                        <div class="account-info-box">
+                            <div class="info-row">
+                                <span class="info-label">Tên đăng nhập (Email):</span>
+                                <span class="info-value">{{EMAIL}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Mật khẩu mặc định:</span>
+                                <span class="info-value password-value">{{PASSWORD}}</span>
+                            </div>
+                        </div>
+
+                        <div class="security-notice">
+                            <strong>Lưu ý Bảo mật:</strong> Đây là mật khẩu mặc định (Được tạo từ ngày sinh của bạn theo định dạng ddMMyyyy). Vui lòng đăng nhập vào ứng dụng và <strong>đổi mật khẩu ngay trong lần đăng nhập đầu tiên</strong> để đảm bảo an toàn.
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <p>Email này được gửi tự động từ hệ thống <strong>APT</strong>.</p>
+                        <p>&copy; 2026 APT - Nền tảng quản lý dân cư thông minh.</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
