@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ptithcm.apt.dto.request.BillRequest;
 import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.ApiResponse;
+import com.ptithcm.apt.dto.response.CreateBillComboResponse;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
 import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
@@ -43,8 +44,9 @@ public class BillController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/bills")
-    public ResponseEntity<ApiResponse<CreateBillResponse>> createBill(@Valid @RequestBody BillRequest req) {
-        CreateBillResponse res = billService.createBill(req);
+    public ResponseEntity<ApiResponse<CreateBillComboResponse>> createBill(
+            @Valid @RequestBody BillRequest req) {
+        CreateBillComboResponse res = billService.createBill(req);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully created bill"));
     }
 

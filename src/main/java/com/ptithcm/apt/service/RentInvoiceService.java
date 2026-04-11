@@ -1,8 +1,9 @@
 package com.ptithcm.apt.service;
 
-import com.ptithcm.apt.entity.User;
+import com.ptithcm.apt.dto.request.CreateRentInvoiceRequest;
+import com.ptithcm.apt.dto.response.CreateRentInvoiceResponse;
 
 public interface RentInvoiceService {
-    void createMonthlyRentInvoice(Long apartmentId, Integer month, Integer year, User creator);
+    CreateRentInvoiceResponse createMonthlyRentInvoice(CreateRentInvoiceRequest req);
 
 }
