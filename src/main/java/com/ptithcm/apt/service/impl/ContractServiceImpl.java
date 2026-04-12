@@ -1,6 +1,7 @@
 package com.ptithcm.apt.service.impl;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import com.ptithcm.apt.repository.ResidentRepository;
 import com.ptithcm.apt.repository.RoleRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.service.ContractService;
+import com.ptithcm.apt.service.EmailService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +33,7 @@ public class ContractServiceImpl implements ContractService {
     private final RoleRepository roleRepository;
     private final ApartmentRepository apartmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -43,6 +46,7 @@ public class ContractServiceImpl implements ContractService {
         if (residentRepository.existsByCitizenIdentity(request.getCitizenIdentity())) {
             throw new RuntimeException("Căn cước công dân này đã tồn tại trong hệ thống!");
         }
+
         if (!"TENANT".equals(request.getRole()) && !"OWNER".equals(request.getRole())) {
             throw new RuntimeException("Vai trò khi lập hợp đồng chỉ có thể là TENANT hoặc OWNER");
         }
@@ -55,8 +59,22 @@ public class ContractServiceImpl implements ContractService {
                 .orElseThrow(() -> new RuntimeException(
                         "Không tìm thấy phòng với ID: " + request.getApartmentId()));
 
-        if (!"AVAILABLE".equals(apartment.getStatus())) {
-            throw new RuntimeException("Phòng này hiện không trống, không thể lập hợp đồng mới!");
+        if ("OWNER".equals(request.getRole()) && !"AVAILABLE".equals(apartment.getStatus())) {
+            throw new RuntimeException("Chỉ có thể lập hợp đồng OWNER cho một căn hộ đang trống!");
+        }
+
+        if ("TENANT".equals(request.getRole()) && !"AVAILABLE".equals(apartment.getStatus())
+                && !"OWNED".equals(apartment.getStatus())) {
+            throw new RuntimeException("Chỉ có thể thuê căn hộ đang trống hoặc căn hộ đã có chủ sở hữu!");
+        }
+
+        if ("TENANT".equals(request.getRole()) && "OWNED".equals(apartment.getStatus())) {
+            residentApartmentRepository.findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apartment.getId())
+                    .ifPresent(currentOwner -> {
+
+                        currentOwner.setIsHead(false);
+                        residentApartmentRepository.saveAndFlush(currentOwner);
+                    });
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
@@ -99,6 +117,22 @@ public class ContractServiceImpl implements ContractService {
 
         apartment.setStatus("TENANT".equals(request.getRole()) ? "RENTED" : "OWNED");
         apartmentRepository.save(apartment);
+
+        try {
+            Map<String, String> templateModel = Map.of(
+                    "FULL_NAME", savedResident.getFullName(),
+                    "ROOM_NUMBER", apartment.getRoomNumber(),
+                    "EMAIL", savedResident.getEmail(),
+                    "PASSWORD", rawPassword);
+
+            emailService.sendHtmlEmail(
+                    savedResident.getEmail(),
+                    "Chào mừng đến với APT - Thông tin tài khoản cư dân",
+                    "welcome-email.html",
+                    templateModel);
+        } catch (Exception e) {
+            System.err.println("Cảnh báo: Tạo hợp đồng thành công nhưng không thể gửi email. Lỗi: " + e.getMessage());
+        }
 
         return ResidentResponse.builder()
                 .id(savedResident.getId())

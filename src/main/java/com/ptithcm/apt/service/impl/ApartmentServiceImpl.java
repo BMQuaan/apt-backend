@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.ptithcm.apt.dto.request.ApartmentRequest;
@@ -25,17 +28,16 @@ public class ApartmentServiceImpl implements ApartmentService {
     private final ApartmentRepository apartmentRepository;
 
     @Override
-    public List<ApartmentResponse> getAllApartments() {
-        return apartmentRepository.findAll()
-                .stream()
-                .map(entity -> new ApartmentResponse(
-                        entity.getId(),
-                        entity.getRoomNumber(),
-                        entity.getFloor(),
-                        entity.getArea(),
-                        entity.getStatus(),
-                        entity.getCreatedAt()))
-                .collect(Collectors.toList());
+    public Page<ApartmentResponse> getAllApartments(int page) {
+        Pageable pageable = PageRequest.of(page, 10);
+        Page<Apartment> apartmentPage = apartmentRepository.findAll(pageable);
+        return apartmentPage.map(entity -> new ApartmentResponse(
+                entity.getId(),
+                entity.getRoomNumber(),
+                entity.getFloor(),
+                entity.getArea(),
+                entity.getStatus(),
+                entity.getCreatedAt()));
     }
 
     @Override
@@ -139,7 +141,22 @@ public class ApartmentServiceImpl implements ApartmentService {
                 updatedEntity.getCreatedAt());
     }
 
-    @Override // Thêm Override và sửa kiểu trả về
+    @Override
+    public List<ApartmentResponse> searchApartmentsByRoomNumber(String keyword) {
+        List<Apartment> apartments = apartmentRepository.findByRoomNumberContaining(keyword);
+
+        return apartments.stream()
+                .map(entity -> new ApartmentResponse(
+                        entity.getId(),
+                        entity.getRoomNumber(),
+                        entity.getFloor(),
+                        entity.getArea(),
+                        entity.getStatus(),
+                        entity.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ApartmentResponse getApartmentById(Long id) {
         Apartment apartment = apartmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not Found Room ID: " + id));
