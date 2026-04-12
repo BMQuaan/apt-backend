@@ -13,10 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ptithcm.apt.dto.request.BillRequest;
+import com.ptithcm.apt.dto.request.CreateMonthlyMetricRequest;
 import com.ptithcm.apt.dto.request.CreateRentInvoiceRequest;
 import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.CreateBillComboResponse;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
+import com.ptithcm.apt.dto.response.CreateMonthlyMetricResponse;
 import com.ptithcm.apt.dto.response.CreateRentInvoiceResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
 import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
@@ -37,6 +39,7 @@ import com.ptithcm.apt.repository.ServiceConfigRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.BillSpecifications;
 import com.ptithcm.apt.service.BillService;
+import com.ptithcm.apt.service.MonthlyMetricService;
 import com.ptithcm.apt.service.RentInvoiceService;
 import com.ptithcm.apt.utils.SecurityUtils;
 
@@ -52,8 +55,8 @@ public class BillServiceImpl implements BillService {
         private final BillMapper billMapper;
         private final RentInvoiceService rentInvoiceService;
         private final ServiceConfigRepository serviceConfigRepository;
+        private final MonthlyMetricService monthlyMetricService;
         private final MonthlyMetricRepository monthlyMetricRepository;
-        private final MonthlyMetricMapper monthlyMetricMapper;
 
         @Override
         @Transactional
@@ -63,7 +66,7 @@ public class BillServiceImpl implements BillService {
                 Map<String, BigDecimal> priceMap = configs.stream()
                                 .collect(Collectors.toMap(ServiceConfig::getServiceCode, ServiceConfig::getUnitPrice));
 
-                Apartment apt = apartmentRepository.findById(req.apartment())
+                Apartment apt = apartmentRepository.findById(req.apartmentId())
                                 .orElseThrow(() -> new RuntimeException("Apartment not found"));
                 String userName = SecurityUtils.getCurrentUsername();
                 User currentUser = userRepository.findByUsername(userName)
@@ -102,12 +105,10 @@ public class BillServiceImpl implements BillService {
                                 .build();
                 billRepository.save(bill);
 
-                MonthlyMetric currentMetric = monthlyMetricMapper.toEntity(req, apt, oldElec, oldWater);
-                monthlyMetricRepository.save(currentMetric);
-
                 CreateBillResponse billRes = billMapper.toCreateBillResponse(bill);
 
                 CreateRentInvoiceResponse rentRes = null;
+                CreateMonthlyMetricResponse metricRes = null;
 
                 if ("RENTED".equals(apt.getStatus())) {
                         CreateRentInvoiceRequest rentReq = new CreateRentInvoiceRequest(
@@ -117,10 +118,21 @@ public class BillServiceImpl implements BillService {
                                         currentUser);
                         rentRes = rentInvoiceService.createMonthlyRentInvoice(rentReq);
                 }
-                
+
+                CreateMonthlyMetricRequest metricRequest = new CreateMonthlyMetricRequest(
+                                apt,
+                                bill.getBillingMonth(),
+                                bill.getBillingYear(),
+                                req.electricityService(),
+                                req.waterService(),
+                                oldElec,
+                                oldWater);
+                metricRes = monthlyMetricService.createMonthlyMetric(metricRequest);
+
                 return CreateBillComboResponse.builder()
                                 .bill(billRes)
                                 .rentInvoice(rentRes)
+                                .monthlyMetric(metricRes)
                                 .build();
         }
 

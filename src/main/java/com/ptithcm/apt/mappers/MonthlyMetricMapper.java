@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.ptithcm.apt.dto.request.BillRequest;
 import com.ptithcm.apt.dto.response.CreateMonthlyMetricResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.entity.MonthlyMetric;
@@ -14,16 +13,17 @@ import com.ptithcm.apt.entity.MonthlyMetric;
 public interface MonthlyMetricMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "apartment", source = "apartment")
-    @Mapping(target = "billingMonth", source = "request.month")
-    @Mapping(target = "billingYear", source = "request.year")
+    @Mapping(target = "billingMonth", source = "month")
+    @Mapping(target = "billingYear", source = "year")
     @Mapping(target = "electricityOld", source = "oldElec")
-    @Mapping(target = "electricityNew", source = "request.electricityService")
+    @Mapping(target = "electricityNew", source = "newElec")
     @Mapping(target = "waterOld", source = "oldWater")
-    @Mapping(target = "waterNew", source = "request.waterService")
+    @Mapping(target = "waterNew", source = "newWater")
     @Mapping(target = "createdAt", ignore = true)
-    MonthlyMetric toEntity(BillRequest request, Apartment apartment, BigDecimal oldElec, BigDecimal oldWater);
+    MonthlyMetric toEntity(Apartment apartment, Integer month, Integer year, BigDecimal newElec, BigDecimal newWater,
+            BigDecimal oldElec, BigDecimal oldWater);
 
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")
     @Mapping(source = "apartment.id", target = "apartmentId")
-    CreateMonthlyMetricResponse toCreateRentInvoiceResponse(MonthlyMetric monthlyMetric);
+    CreateMonthlyMetricResponse toCreateMonthlyMetricResponse(MonthlyMetric monthlyMetric);
 }

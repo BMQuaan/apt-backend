@@ -7,8 +7,8 @@ import lombok.Builder;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CreateBillComboResponse(
-                CreateBillResponse bill,
-                CreateRentInvoiceResponse rentInvoice,
-                CreateMonthlyMetricResponse monthlyMetric) {
+        CreateBillResponse bill,
+        CreateRentInvoiceResponse rentInvoice,
+        CreateMonthlyMetricResponse monthlyMetric) {
 
 }
