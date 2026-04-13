@@ -51,4 +51,5 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
     @Query("SELECT ra.resident FROM ResidentApartment ra " +
             "WHERE ra.apartment.id = :aptId AND ra.role = 'OWNER' AND ra.isActive = true")
     Optional<Resident> findActiveOwner(@Param("aptId") Long aptId);
+
 }

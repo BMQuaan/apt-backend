@@ -35,6 +35,7 @@ import com.ptithcm.apt.mappers.MonthlyMetricMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
 import com.ptithcm.apt.repository.MonthlyMetricRepository;
+import com.ptithcm.apt.repository.ResidentApartmentRepository;
 import com.ptithcm.apt.repository.ServiceConfigRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.BillSpecifications;
@@ -57,6 +58,7 @@ public class BillServiceImpl implements BillService {
         private final ServiceConfigRepository serviceConfigRepository;
         private final MonthlyMetricService monthlyMetricService;
         private final MonthlyMetricRepository monthlyMetricRepository;
+        private final ResidentApartmentRepository residentApartmentRepository;
 
         @Override
         @Transactional
@@ -68,13 +70,27 @@ public class BillServiceImpl implements BillService {
 
                 Apartment apt = apartmentRepository.findById(req.apartmentId())
                                 .orElseThrow(() -> new RuntimeException("Apartment not found"));
-                String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                if ("AVAILABLE".equals(apt.getStatus())) {
+                        throw new RuntimeException(
+                                        "Cannot create a bill for an AVAILABLE apartment.");
+                }
 
                 MonthlyMetric lastMetric = monthlyMetricRepository
                                 .findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(apt.getId())
                                 .orElse(null);
+
+                if (lastMetric != null) {
+                        if (req.year() < lastMetric.getBillingYear() ||
+                                        (req.year().equals(lastMetric.getBillingYear())
+                                                        && req.month() <= lastMetric.getBillingMonth())) {
+                                throw new RuntimeException(
+                                                "Cannot create bill for a period that already has metrics or is in the past.");
+                        }
+                }
+
+                String userName = SecurityUtils.getCurrentUsername();
+                User currentUser = userRepository.findByUsername(userName)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
                 BigDecimal oldElec = (lastMetric != null) ? lastMetric.getElectricityNew() : BigDecimal.ZERO;
                 BigDecimal oldWater = (lastMetric != null) ? lastMetric.getWaterNew() : BigDecimal.ZERO;
@@ -110,7 +126,10 @@ public class BillServiceImpl implements BillService {
                 CreateRentInvoiceResponse rentRes = null;
                 CreateMonthlyMetricResponse metricRes = null;
 
-                if ("RENTED".equals(apt.getStatus())) {
+                boolean shouldCreateRentInvoice = "RENTED".equals(apt.getStatus())
+                                || residentApartmentRepository.existsByApartmentIdAndRoleAndIsActiveTrue(apt.getId(),
+                                                "TENANT");
+                if (shouldCreateRentInvoice) {
                         CreateRentInvoiceRequest rentReq = new CreateRentInvoiceRequest(
                                         apt.getId(),
                                         bill.getBillingMonth(),
