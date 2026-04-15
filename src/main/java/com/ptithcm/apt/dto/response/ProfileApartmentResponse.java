@@ -13,5 +13,7 @@ public record ProfileApartmentResponse(
         String role, // OWNER, TENANT, MEMBER
         Boolean isHead,
         LocalDate contractStart,
-        LocalDate contractEnd
+        LocalDate contractEnd,
+        BigDecimal rentalPrice,
+        BigDecimal depositAmount
 ) {}
