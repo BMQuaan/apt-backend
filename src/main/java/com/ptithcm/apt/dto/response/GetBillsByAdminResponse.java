@@ -1,6 +1,7 @@
 package com.ptithcm.apt.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ptithcm.apt.enums.BillStatus;
@@ -26,4 +27,5 @@ public class GetBillsByAdminResponse {
     private BigDecimal sanitationFee;
     private BigDecimal totalAmount;
     private BillStatus status;
+    private LocalDateTime dueDate;
 }

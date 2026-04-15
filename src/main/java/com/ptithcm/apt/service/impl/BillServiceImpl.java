@@ -20,6 +20,7 @@ import com.ptithcm.apt.dto.response.CreateBillComboResponse;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
 import com.ptithcm.apt.dto.response.CreateMonthlyMetricResponse;
 import com.ptithcm.apt.dto.response.CreateRentInvoiceResponse;
+import com.ptithcm.apt.dto.response.GetBillDetailByAdminResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
 import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
 import com.ptithcm.apt.dto.response.GetMyBillsResponse;
@@ -30,6 +31,7 @@ import com.ptithcm.apt.entity.MonthlyMetric;
 import com.ptithcm.apt.entity.ServiceConfig;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
+import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mappers.BillMapper;
 import com.ptithcm.apt.mappers.MonthlyMetricMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
@@ -212,6 +214,12 @@ public class BillServiceImpl implements BillService {
                                                 "Bill not found or you don't have permission to view it"));
 
                 return billMapper.toGetMyBillDetailByIdResponse(bill);
+        }
+
+        @Override
+        public GetBillDetailByAdminResponse getBillDetailByAdmin(Long id) {
+                Bill bill = billRepository.findById(id).orElseThrow(() -> new NotFoundException("Bill not found"));
+                return billMapper.toGetBillDetailByAdminResponse(bill);
         }
 
 }

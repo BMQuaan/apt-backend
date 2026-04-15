@@ -8,6 +8,7 @@ import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.ApiResponse;
 import com.ptithcm.apt.dto.response.CreateBillComboResponse;
 import com.ptithcm.apt.dto.response.CreateBillResponse;
+import com.ptithcm.apt.dto.response.GetBillDetailByAdminResponse;
 import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
 import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
 import com.ptithcm.apt.dto.response.GetMyBillsResponse;
@@ -68,6 +69,13 @@ public class BillController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<GetBillsByAdminResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/bills/{billId}")
+    public ResponseEntity<ApiResponse<GetBillDetailByAdminResponse>> getBillDetailByAdmin(@PathVariable Long billId) {
+        GetBillDetailByAdminResponse res = billService.getBillDetailByAdmin(billId);
+        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched bill"));
     }
 
     @GetMapping("/bills/my-bills")
