@@ -21,6 +21,17 @@ public class MonthlyMetricImpl implements MonthlyMetricService {
     @Override
     @Transactional
     public CreateMonthlyMetricResponse createMonthlyMetric(CreateMonthlyMetricRequest req) {
+
+        if (req.electricityNew().compareTo(req.electricityOld()) < 0) {
+            throw new RuntimeException("The new electricity reading (" + req.electricityNew()
+                    + ") cannot be lower than the previous reading (" + req.electricityOld() + ").");
+        }
+
+        if (req.waterNew().compareTo(req.waterOld()) < 0) {
+            throw new RuntimeException("The new water reading (" + req.waterNew()
+                    + ") cannot be lower than the previous reading (" + req.waterOld() + ").");
+        }
+
         MonthlyMetric currentMonthlyMetric = monthlyMetricMapper.toEntity(req.apartment(), req.month(), req.year(),
                 req.electricityNew(), req.waterNew(), req.electricityOld(), req.waterOld());
         monthlyMetricRepository.save(currentMonthlyMetric);
