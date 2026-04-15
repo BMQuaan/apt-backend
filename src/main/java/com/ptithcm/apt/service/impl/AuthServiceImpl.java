@@ -303,8 +303,4 @@ public class AuthServiceImpl implements AuthService {
         return String.valueOf(otp);
     }
 
-    //SHA256
-    private String hashResetToken(String token) {
-        return DigestUtils.md5DigestAsHex(token.getBytes(StandardCharsets.UTF_8));
-    }
 }

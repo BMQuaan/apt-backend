@@ -16,8 +16,9 @@ public class ProfileController {
 
     public final ProfileService profileService;
 
-    @GetMapping("/dashboard")
+    @GetMapping
     public ResponseEntity<ApiResponse<ProfileDashboardResponse>> getProfileDashboard() {
-        return ResponseEntity.ok(ApiResponse.success(profileService.getProfileDashboard(), "Lấy tổng quan hồ sơ thành công"));
+        return ResponseEntity
+                .ok(ApiResponse.success(profileService.getProfileDashboard(), "Lấy tổng quan hồ sơ thành công"));
     }
 }
