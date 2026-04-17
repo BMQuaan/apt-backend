@@ -62,8 +62,15 @@ public class Bill {
     private BillStatus status = BillStatus.UNPAID;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "confirmed_by")
     private User confirmedBy;
+
+    @Column(name = "due_date", insertable = false, updatable = false)
+    private LocalDateTime dueDate;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;

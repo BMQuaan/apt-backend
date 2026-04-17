@@ -1,9 +1,12 @@
 package com.ptithcm.apt.repository;
 
+import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,4 +41,15 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
     List<ResidentApartment> findByApartment_IdAndIsActiveTrue(Long apartmentId);
 
     Optional<ResidentApartment> findByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId);
+
+    // Tìm người thuê (TENANT) đang hoạt động để gửi hóa đơn tiền nhà
+    @Query("SELECT ra FROM ResidentApartment ra " +
+            "WHERE ra.apartment.id = :aptId AND ra.role = 'TENANT' AND ra.isActive = true")
+    Optional<ResidentApartment> findActiveTenant(@Param("aptId") Long aptId);
+
+    // Tìm chủ sở hữu (OWNER) để biết tiền này thuộc về ai (Snapshot)
+    @Query("SELECT ra.resident FROM ResidentApartment ra " +
+            "WHERE ra.apartment.id = :aptId AND ra.role = 'OWNER' AND ra.isActive = true")
+    Optional<Resident> findActiveOwner(@Param("aptId") Long aptId);
+
 }

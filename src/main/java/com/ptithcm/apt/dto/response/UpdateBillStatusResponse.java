@@ -29,5 +29,7 @@ public class UpdateBillStatusResponse {
     private BigDecimal totalAmount;
     private BillStatus status;
     private LocalDateTime paidAt;
+    private String createdBy;
+    private String confirmedBy;
     private LocalDateTime createdAt;
 }

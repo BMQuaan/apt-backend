@@ -3,17 +3,17 @@ package com.ptithcm.apt.dto.response;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ptithcm.apt.enums.BillStatus;
 
 import lombok.Builder;
 
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record CreateBillResponse(
+public record GetBillDetailByAdminResponse(
         Long id,
-        Long apartment,
+        Long apartmentId,
         String apartmentName,
+        String apartmentFloor,
+        BigDecimal apartmentArea,
         Integer billingMonth,
         Integer billingYear,
         BigDecimal electricityFee,
@@ -22,8 +22,10 @@ public record CreateBillResponse(
         BigDecimal sanitationFee,
         BigDecimal totalAmount,
         BillStatus status,
-        String createdBy,
         LocalDateTime createdAt,
-        LocalDateTime dueDate
-) {
+        String createdBy,
+        String confirmBy,
+        String paidAt,
+        LocalDateTime dueDate) {
+
 }

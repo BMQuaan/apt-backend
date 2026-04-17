@@ -6,13 +6,13 @@ import java.time.LocalDate;
 
 @Builder
 public record AdminServiceConfigResponse(
-        String serviceCode,
-        String serviceName,
-        String unit,
+                String serviceCode,
+                String serviceName,
+                String unit,
 
-        BigDecimal currentPrice,
-        LocalDate currentEffectiveFrom,
+                BigDecimal currentPrice,
+                LocalDate currentEffectiveFrom,
 
-        BigDecimal upcomingPrice,
-        LocalDate upcomingEffectiveFrom
-) {}
+                BigDecimal upcomingPrice,
+                LocalDate upcomingEffectiveFrom) {
+}

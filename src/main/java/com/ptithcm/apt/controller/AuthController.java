@@ -50,7 +50,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(resetToken, "Xác thực OTP thành công."));
     }
 
-    @PostMapping("/reset-password")
+    @PatchMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
 
@@ -58,7 +58,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(null, "Đổi mật khẩu thành công. Bạn có thể sử dụng mật khẩu mới để đăng nhập."));
     }
 
-    @PostMapping("/change-password")
+    @PatchMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request) {
 

@@ -6,7 +6,7 @@ import java.util.List;
 @Builder
 public record ProfileDashboardResponse(
         ProfileInfoResponse personalInfo,
-        List<ProfileApartmentResponse> livingApartments,
+        ProfileApartmentResponse livingApartment,
         List<ProfileApartmentResponse> ownedApartments,
         List<FamilyMemberResponse> familyMembers
 ) {}
