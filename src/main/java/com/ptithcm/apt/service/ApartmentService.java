@@ -18,4 +18,6 @@ public interface ApartmentService {
     List<ApartmentResponse> searchApartmentsByRoomNumber(String id);
 
     ApartmentResponse getApartmentById(Long id);
+
+    List<ApartmentResponse> getApartmentsByStatus(String status);
 }

@@ -169,4 +169,14 @@ public class ApartmentServiceImpl implements ApartmentService {
                 apartment.getStatus(),
                 apartment.getCreatedAt());
     }
+
+    @Override
+    public List<ApartmentResponse> getApartmentsByStatus(String status) {
+        List<Apartment> apartments = apartmentRepository.findByStatus(status);
+        return apartments.stream()
+                .map(entity -> new ApartmentResponse(
+                        entity.getId(), entity.getRoomNumber(), entity.getFloor(),
+                        entity.getArea(), entity.getStatus(), entity.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
 }
