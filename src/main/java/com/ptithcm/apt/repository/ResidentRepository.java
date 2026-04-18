@@ -7,9 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.ptithcm.apt.entity.Resident;
-import com.ptithcm.apt.entity.ResidentApartment;
-
-import java.util.List;
 
 public interface ResidentRepository extends JpaRepository<Resident, Long> {
     boolean existsByCitizenIdentity(String citizenIdentity);

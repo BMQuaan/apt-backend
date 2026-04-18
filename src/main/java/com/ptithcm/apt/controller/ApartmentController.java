@@ -23,7 +23,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/api/v1/admin/apartments")
 @CrossOrigin(originPatterns = "*")
 @RequiredArgsConstructor
 public class ApartmentController {
@@ -31,20 +31,20 @@ public class ApartmentController {
     private final ApartmentService apartmentService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/apartment")
+    @GetMapping
     public ResponseEntity<Page<ApartmentResponse>> getAllApartments(@RequestParam(defaultValue = "0") int page) {
         Page<ApartmentResponse> responses = apartmentService.getAllApartments(page);
         return ResponseEntity.ok(responses);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/apartment")
+    @PostMapping
     public ResponseEntity<ApartmentResponse> createApartment(@Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.createApartment(request));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/apartment/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Long id,
             @Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
@@ -53,13 +53,18 @@ public class ApartmentController {
     // Chi tiết admin
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/apartment/search")
+    @GetMapping("/search")
     public ResponseEntity<List<ApartmentResponse>> searchApartmentsByRoomNumber(@RequestParam String keyword) {
         return ResponseEntity.ok(apartmentService.searchApartmentsByRoomNumber(keyword));
     }
 
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<ApartmentResponse>> getApartmentsByStatus(@PathVariable String status) {
+        return ResponseEntity.ok(apartmentService.getApartmentsByStatus(status));
+    }
+
     // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
-    @GetMapping("/apartment/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Long id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));
     }

@@ -39,14 +39,6 @@ public class ContractServiceImpl implements ContractService {
     @Transactional
     public ResidentResponse createContract(ContractRequest request) {
 
-        if (residentRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email này đã tồn tại trong hệ thống!");
-        }
-
-        if (residentRepository.existsByCitizenIdentity(request.getCitizenIdentity())) {
-            throw new RuntimeException("Căn cước công dân này đã tồn tại trong hệ thống!");
-        }
-
         if (!"TENANT".equals(request.getRole()) && !"OWNER".equals(request.getRole())) {
             throw new RuntimeException("Vai trò khi lập hợp đồng chỉ có thể là TENANT hoặc OWNER");
         }
