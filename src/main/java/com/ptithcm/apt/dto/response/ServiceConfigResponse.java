@@ -12,6 +12,5 @@ public record ServiceConfigResponse(
         String serviceName,
         BigDecimal unitPrice,
         String unit,
-        LocalDate effectiveFrom,
-        LocalDateTime updatedAt) {
+        LocalDate effectiveFrom) {
 }
