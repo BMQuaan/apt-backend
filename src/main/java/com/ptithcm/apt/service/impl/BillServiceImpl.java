@@ -12,22 +12,23 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ptithcm.apt.dto.request.BillRequest;
+import com.ptithcm.apt.dto.request.CreateBillRequest;
 import com.ptithcm.apt.dto.request.CreateMonthlyMetricRequest;
 import com.ptithcm.apt.dto.request.CreateRentInvoiceRequest;
 import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
-import com.ptithcm.apt.dto.response.CreateBillComboResponse;
-import com.ptithcm.apt.dto.response.CreateBillResponse;
-import com.ptithcm.apt.dto.response.CreateMonthlyMetricResponse;
-import com.ptithcm.apt.dto.response.CreateRentInvoiceResponse;
-import com.ptithcm.apt.dto.response.GetBillDetailByAdminResponse;
-import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
-import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
-import com.ptithcm.apt.dto.response.GetMyBillsResponse;
+import com.ptithcm.apt.dto.response.BillSummaryResponse;
+import com.ptithcm.apt.dto.response.BillResponse;
+import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
+import com.ptithcm.apt.dto.response.RentInvoiceResponse;
+import com.ptithcm.apt.dto.response.AdminBillDetailResponse;
+import com.ptithcm.apt.dto.response.AdminBillListResponse;
+import com.ptithcm.apt.dto.response.UserBillDetailReponse;
+import com.ptithcm.apt.dto.response.UserBillListResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.entity.Bill;
 import com.ptithcm.apt.entity.MonthlyMetric;
+import com.ptithcm.apt.entity.ResidentApartment;
 import com.ptithcm.apt.entity.ServiceConfig;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
@@ -42,6 +43,7 @@ import com.ptithcm.apt.repository.ServiceConfigRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.BillSpecifications;
 import com.ptithcm.apt.service.BillService;
+import com.ptithcm.apt.service.EmailService;
 import com.ptithcm.apt.service.MonthlyMetricService;
 import com.ptithcm.apt.service.RentInvoiceService;
 import com.ptithcm.apt.utils.SecurityUtils;
@@ -61,10 +63,12 @@ public class BillServiceImpl implements BillService {
         private final MonthlyMetricService monthlyMetricService;
         private final MonthlyMetricRepository monthlyMetricRepository;
         private final ResidentApartmentRepository residentApartmentRepository;
+        private final EmailService emailService;
 
         @Override
         @Transactional
-        public CreateBillComboResponse createBill(BillRequest req) {
+        public BillSummaryResponse createBill(CreateBillRequest req) {
+                // LocalDateTime testDate = LocalDateTime.of(2026, 3, 15, 10, 30);
 
                 List<ServiceConfig> configs = serviceConfigRepository.findAllCurrentConfigs();
                 Map<String, BigDecimal> priceMap = configs.stream()
@@ -118,15 +122,16 @@ public class BillServiceImpl implements BillService {
                                 .sanitationFee(sanitationFee)
                                 .electricityFee(electricityFee)
                                 .totalAmount(totalAmount)
+                                // .createdAt(testDate)
                                 .createdBy(currentUser)
                                 .status(BillStatus.UNPAID)
                                 .build();
                 billRepository.save(bill);
 
-                CreateBillResponse billRes = billMapper.toCreateBillResponse(bill);
+                BillResponse billRes = billMapper.toCreateBillResponse(bill);
 
-                CreateRentInvoiceResponse rentRes = null;
-                CreateMonthlyMetricResponse metricRes = null;
+                RentInvoiceResponse rentRes = null;
+                MonthlyMetricResponse metricRes = null;
 
                 boolean shouldCreateRentInvoice = "RENTED".equals(apt.getStatus())
                                 || residentApartmentRepository.existsByApartmentIdAndRoleAndIsActiveTrue(apt.getId(),
@@ -150,7 +155,42 @@ public class BillServiceImpl implements BillService {
                                 oldWater);
                 metricRes = monthlyMetricService.createMonthlyMetric(metricRequest);
 
-                return CreateBillComboResponse.builder()
+                if (bill.getDueDate() == null) {
+                        bill.setDueDate(LocalDateTime.now().plusDays(15));
+                }
+
+                try {
+                        ResidentApartment headResident = residentApartmentRepository
+                                        .findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apt.getId())
+                                        .orElse(null);
+
+                        if (headResident != null && headResident.getResident().getEmail() != null) {
+
+                                Map<String, String> templateModel = Map.of(
+                                                "fullName", headResident.getResident().getFullName(),
+                                                "roomNumber", apt.getRoomNumber(),
+                                                "month", String.valueOf(bill.getBillingMonth()),
+                                                "year", String.valueOf(bill.getBillingYear()),
+                                                "electricityFee", String.format("%,.0f", bill.getElectricityFee()),
+                                                "waterFee", String.format("%,.0f", bill.getWaterFee()),
+                                                "managementFee", String.format("%,.0f", bill.getManagementFee()),
+                                                "sanitationFee", String.format("%,.0f", bill.getSanitationFee()),
+                                                "totalAmount", String.format("%,.0f", bill.getTotalAmount()),
+                                                "dueDate", bill.getDueDate().format(java.time.format.DateTimeFormatter
+                                                                .ofPattern("dd/MM/yyyy")));
+
+                                emailService.sendHtmlEmail(
+                                                headResident.getResident().getEmail(),
+                                                "[AptApp] Thông báo phí dịch vụ tháng " + bill.getBillingMonth() + "/"
+                                                                + bill.getBillingYear() + " - Phòng "
+                                                                + apt.getRoomNumber(),
+                                                "new_service_bill_template_vi.html",
+                                                templateModel);
+                        }
+                } catch (Exception e) {
+                }
+
+                return BillSummaryResponse.builder()
                                 .bill(billRes)
                                 .rentInvoice(rentRes)
                                 .monthlyMetric(metricRes)
@@ -164,6 +204,10 @@ public class BillServiceImpl implements BillService {
 
                 BillStatus newStatus = req.status();
 
+                if (newStatus == BillStatus.LATE) {
+                        throw new RuntimeException("Can not change to LATE");
+                }
+
                 if (bill.getStatus().equals(newStatus)) {
                         throw new RuntimeException("Can not change to the same status");
                 }
@@ -171,12 +215,9 @@ public class BillServiceImpl implements BillService {
                 bill.setStatus(newStatus);
                 if (newStatus == BillStatus.PAID) {
                         bill.setPaidAt(LocalDateTime.now());
+                        bill.setConfirmedBy(userRepository.findByUsername(SecurityUtils.getCurrentUsername())
+                                        .orElseThrow(() -> new RuntimeException("User not found")));
                 }
-
-                bill.setConfirmedBy(userRepository.findByUsername(SecurityUtils.getCurrentUsername())
-                                .orElseThrow(() -> new RuntimeException("User not found")));
-
-                bill.setPaidAt(LocalDateTime.now());
 
                 billRepository.save(bill);
 
@@ -184,7 +225,7 @@ public class BillServiceImpl implements BillService {
         }
 
         @Override
-        public Page<GetBillsByAdminResponse> getBillsByAdmin(Integer month, Integer year, Long apartmentId,
+        public Page<AdminBillListResponse> getBillsByAdmin(Integer month, Integer year, Long apartmentId,
                         BillStatus status, Pageable pageable) {
                 Specification<Bill> spec = BillSpecifications.hasFilters(month, year, apartmentId, status);
                 Page<Bill> bills = billRepository.findAll(spec, pageable);
@@ -192,7 +233,7 @@ public class BillServiceImpl implements BillService {
         }
 
         @Override
-        public Page<GetMyBillsResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
+        public Page<UserBillListResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
                         Pageable pageable) {
                 String userName = SecurityUtils.getCurrentUsername();
                 User currentUser = userRepository.findByUsername(userName)
@@ -204,7 +245,7 @@ public class BillServiceImpl implements BillService {
         }
 
         @Override
-        public GetMyBillDetailByIdResponse getMyBillDetailById(Long id) {
+        public UserBillDetailReponse getMyBillDetailById(Long id) {
                 String userName = SecurityUtils.getCurrentUsername();
                 User currentUser = userRepository.findByUsername(userName)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -217,7 +258,7 @@ public class BillServiceImpl implements BillService {
         }
 
         @Override
-        public GetBillDetailByAdminResponse getBillDetailByAdmin(Long id) {
+        public AdminBillDetailResponse getBillDetailByAdmin(Long id) {
                 Bill bill = billRepository.findById(id).orElseThrow(() -> new NotFoundException("Bill not found"));
                 return billMapper.toGetBillDetailByAdminResponse(bill);
         }

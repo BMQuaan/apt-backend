@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ptithcm.apt.dto.request.CreateRentInvoiceRequest;
-import com.ptithcm.apt.dto.response.CreateRentInvoiceResponse;
+import com.ptithcm.apt.dto.response.RentInvoiceResponse;
 import com.ptithcm.apt.entity.RentInvoice;
 import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
@@ -28,7 +28,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
 
     @Override
     @Transactional
-    public CreateRentInvoiceResponse createMonthlyRentInvoice(CreateRentInvoiceRequest req) {
+    public RentInvoiceResponse createMonthlyRentInvoice(CreateRentInvoiceRequest req) {
         ResidentApartment contract = residentApartmentRepository.findActiveTenant(req.apartmentId())
                 .orElseThrow(() -> new RuntimeException(
                         "Apartment is marked as RENTED but no active tenant contract was found!"));

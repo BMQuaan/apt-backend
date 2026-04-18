@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.ptithcm.apt.dto.response.CreateMonthlyMetricResponse;
+import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.entity.MonthlyMetric;
 
@@ -25,5 +25,5 @@ public interface MonthlyMetricMapper {
 
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")
     @Mapping(source = "apartment.id", target = "apartmentId")
-    CreateMonthlyMetricResponse toCreateMonthlyMetricResponse(MonthlyMetric monthlyMetric);
+    MonthlyMetricResponse toCreateMonthlyMetricResponse(MonthlyMetric monthlyMetric);
 }

@@ -3,15 +3,15 @@ package com.ptithcm.apt.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ptithcm.apt.dto.request.BillRequest;
+import com.ptithcm.apt.dto.request.CreateBillRequest;
 import com.ptithcm.apt.dto.request.UpdateBillStatusRequest;
 import com.ptithcm.apt.dto.response.ApiResponse;
-import com.ptithcm.apt.dto.response.CreateBillComboResponse;
-import com.ptithcm.apt.dto.response.CreateBillResponse;
-import com.ptithcm.apt.dto.response.GetBillDetailByAdminResponse;
-import com.ptithcm.apt.dto.response.GetBillsByAdminResponse;
-import com.ptithcm.apt.dto.response.GetMyBillDetailByIdResponse;
-import com.ptithcm.apt.dto.response.GetMyBillsResponse;
+import com.ptithcm.apt.dto.response.BillSummaryResponse;
+import com.ptithcm.apt.dto.response.BillResponse;
+import com.ptithcm.apt.dto.response.AdminBillDetailResponse;
+import com.ptithcm.apt.dto.response.AdminBillListResponse;
+import com.ptithcm.apt.dto.response.UserBillDetailReponse;
+import com.ptithcm.apt.dto.response.UserBillListResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
 import com.ptithcm.apt.entity.User;
@@ -45,9 +45,9 @@ public class BillController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/bills")
-    public ResponseEntity<ApiResponse<CreateBillComboResponse>> createBill(
-            @Valid @RequestBody BillRequest req) {
-        CreateBillComboResponse res = billService.createBill(req);
+    public ResponseEntity<ApiResponse<BillSummaryResponse>> createBill(
+            @Valid @RequestBody CreateBillRequest req) {
+        BillSummaryResponse res = billService.createBill(req);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully created bill"));
     }
 
@@ -61,38 +61,38 @@ public class BillController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/bills")
-    public ResponseEntity<ApiResponse<PageResponse<GetBillsByAdminResponse>>> getBillsByAdmin(
+    public ResponseEntity<ApiResponse<PageResponse<AdminBillListResponse>>> getBillsByAdmin(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Long apartmentId,
             @RequestParam(required = false) BillStatus status,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
-        Page<GetBillsByAdminResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, pageable);
+        Page<AdminBillListResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/bills/{billId}")
-    public ResponseEntity<ApiResponse<GetBillDetailByAdminResponse>> getBillDetailByAdmin(@PathVariable Long billId) {
-        GetBillDetailByAdminResponse res = billService.getBillDetailByAdmin(billId);
+    public ResponseEntity<ApiResponse<AdminBillDetailResponse>> getBillDetailByAdmin(@PathVariable Long billId) {
+        AdminBillDetailResponse res = billService.getBillDetailByAdmin(billId);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched bill"));
     }
 
     @GetMapping("/bills/my-bills")
-    public ResponseEntity<ApiResponse<PageResponse<GetMyBillsResponse>>> getMyBills(
+    public ResponseEntity<ApiResponse<PageResponse<UserBillListResponse>>> getMyBills(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Long apartmentId,
             @RequestParam(required = false) BillStatus status,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
-        Page<GetMyBillsResponse> bills = billService.getMyBills(month, year, apartmentId, status, pageable);
+        Page<UserBillListResponse> bills = billService.getMyBills(month, year, apartmentId, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched my bills"));
     }
 
     @GetMapping("/bills/my-bills/{billId}")
-    public ResponseEntity<ApiResponse<GetMyBillDetailByIdResponse>> getMyBillDetailById(
+    public ResponseEntity<ApiResponse<UserBillDetailReponse>> getMyBillDetailById(
             @PathVariable Long billId) {
-        GetMyBillDetailByIdResponse res = billService.getMyBillDetailById(billId);
+        UserBillDetailReponse res = billService.getMyBillDetailById(billId);
         return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched bill"));
     }
 

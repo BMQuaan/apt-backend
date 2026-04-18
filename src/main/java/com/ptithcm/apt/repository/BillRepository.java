@@ -3,6 +3,8 @@ package com.ptithcm.apt.repository;
 import com.ptithcm.apt.entity.Bill;
 import com.ptithcm.apt.enums.BillStatus;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -40,4 +42,6 @@ public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificat
                         "JOIN Resident r ON r.id = ra.resident.id " +
                         "WHERE b.id = :billId AND r.user.id = :userId AND ra.isActive = true")
         Optional<Bill> findByIdAndUserId(@Param("billId") Long billId, @Param("userId") Long userId);
+
+        List<Bill> findAllByStatusAndDueDateBefore(BillStatus status, LocalDateTime dueDate);
 }

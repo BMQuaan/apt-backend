@@ -1,7 +1,6 @@
 package com.ptithcm.apt.dto.response;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ptithcm.apt.enums.BillStatus;
@@ -16,9 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class GetBillsByAdminResponse {
+public class UserBillListResponse {
     private Long id;
-    private String apartmentName;   
+    private String apartmentName;
     private Integer billingMonth;
     private Integer billingYear;
     private BigDecimal electricityFee;
@@ -27,5 +26,4 @@ public class GetBillsByAdminResponse {
     private BigDecimal sanitationFee;
     private BigDecimal totalAmount;
     private BillStatus status;
-    private LocalDateTime dueDate;
 }

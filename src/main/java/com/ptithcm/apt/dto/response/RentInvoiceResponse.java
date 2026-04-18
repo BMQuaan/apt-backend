@@ -9,7 +9,7 @@ import com.ptithcm.apt.enums.RentStatus;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record CreateRentInvoiceResponse(
+public record RentInvoiceResponse(
                 Long id,
                 Long apartment,
                 String apartmentName,
