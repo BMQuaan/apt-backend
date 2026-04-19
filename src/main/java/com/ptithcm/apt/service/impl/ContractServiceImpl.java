@@ -1,13 +1,18 @@
 package com.ptithcm.apt.service.impl;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ptithcm.apt.dto.request.ContractRequest;
+import com.ptithcm.apt.dto.response.ContractResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.entity.Resident;
@@ -69,33 +74,50 @@ public class ContractServiceImpl implements ContractService {
                     });
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-        String rawPassword = request.getDob().format(formatter);
+        Resident resident;
+        boolean isNewAccount = false;
+        String rawPassword = "";
 
-        // Tạo tài khoản User
-        Role userRole = roleRepository.findByRoleName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Chưa cấu hình Role USER trong DB"));
+        var existingResidentByEmail = residentRepository.findByEmail(request.getEmail());
+        var existingResidentByCccd = residentRepository.findByCitizenIdentity(request.getCitizenIdentity());
 
-        User newUser = User.builder()
-                .username(request.getEmail())
-                .password(passwordEncoder.encode(rawPassword))
-                .role(userRole)
-                .isActive(true)
-                .build();
-        User savedUser = userRepository.save(newUser);
+        if (existingResidentByEmail.isPresent()) {
+            resident = existingResidentByEmail.get();
+            if (!resident.getCitizenIdentity().equals(request.getCitizenIdentity())) {
+                throw new RuntimeException("Email này đã được đăng ký cho một CCCD khác!");
+            }
+        } else if (existingResidentByCccd.isPresent()) {
+            throw new RuntimeException("CCCD này đã tồn tại nhưng đăng ký với một Email khác!");
+        } else {
+            isNewAccount = true;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+            rawPassword = request.getDob().format(formatter);
 
-        Resident resident = Resident.builder()
-                .user(savedUser)
-                .fullName(request.getFullName())
-                .dob(request.getDob())
-                .phone(request.getPhone())
-                .citizenIdentity(request.getCitizenIdentity())
-                .email(request.getEmail())
-                .build();
-        Resident savedResident = residentRepository.save(resident);
+            // Tạo tài khoản User
+            Role userRole = roleRepository.findByRoleName("ROLE_USER")
+                    .orElseThrow(() -> new RuntimeException("Chưa cấu hình Role USER trong DB"));
+            User newUser = User.builder()
+                    .username(request.getEmail())
+                    .password(passwordEncoder.encode(rawPassword))
+                    .role(userRole)
+                    .isActive(true)
+                    .build();
+            User savedUser = userRepository.save(newUser);
+
+            Resident newResident = Resident.builder()
+                    .user(savedUser)
+                    .fullName(request.getFullName())
+                    .dob(request.getDob())
+                    .phone(request.getPhone())
+                    .citizenIdentity(request.getCitizenIdentity())
+                    .email(request.getEmail())
+                    .build();
+            resident = residentRepository.save(newResident);
+
+        }
 
         ResidentApartment contract = ResidentApartment.builder()
-                .resident(savedResident)
+                .resident(resident)
                 .apartment(apartment)
                 .role(request.getRole())
                 .isHead(true)
@@ -110,29 +132,69 @@ public class ContractServiceImpl implements ContractService {
         apartment.setStatus("TENANT".equals(request.getRole()) ? "RENTED" : "OWNED");
         apartmentRepository.save(apartment);
 
-        try {
-            Map<String, String> templateModel = Map.of(
-                    "FULL_NAME", savedResident.getFullName(),
-                    "ROOM_NUMBER", apartment.getRoomNumber(),
-                    "EMAIL", savedResident.getEmail(),
-                    "PASSWORD", rawPassword);
+        if (isNewAccount) {
+            try {
+                Map<String, String> templateModel = Map.of(
+                        "FULL_NAME", resident.getFullName(),
+                        "ROOM_NUMBER", apartment.getRoomNumber(),
+                        "EMAIL", resident.getEmail(),
+                        "PASSWORD", rawPassword);
 
-            emailService.sendHtmlEmail(
-                    savedResident.getEmail(),
-                    "Chào mừng đến với APT - Thông tin tài khoản cư dân",
-                    "welcome-email.html",
-                    templateModel);
-        } catch (Exception e) {
-            System.err.println("Cảnh báo: Tạo hợp đồng thành công nhưng không thể gửi email. Lỗi: " + e.getMessage());
+                emailService.sendHtmlEmail(
+                        resident.getEmail(),
+                        "Chào mừng đến với APT - Thông tin tài khoản cư dân",
+                        "welcome-email.html",
+                        templateModel);
+            } catch (Exception e) {
+                System.err
+                        .println("Cảnh báo: Tạo hợp đồng thành công nhưng không thể gửi email. Lỗi: " + e.getMessage());
+            }
         }
 
         return ResidentResponse.builder()
-                .id(savedResident.getId())
-                .fullName(savedResident.getFullName())
-                .citizenIdentity(savedResident.getCitizenIdentity())
-                .dob(savedResident.getDob())
-                .phone(savedResident.getPhone())
-                .email(savedResident.getEmail())
+                .id(resident.getId())
+                .fullName(resident.getFullName())
+                .citizenIdentity(resident.getCitizenIdentity())
+                .dob(resident.getDob())
+                .phone(resident.getPhone())
+                .email(resident.getEmail())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Page<ContractResponse> getAllContracts(String keyword, String role, Pageable pageable) {
+        Page<ResidentApartment> pageData;
+
+        pageData = residentApartmentRepository.searchAndFilterContracts(keyword, role,
+                pageable);
+
+        return pageData.map(ra -> mapToContractResponse(ra));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ContractResponse getContractDetail(Long contractId) {
+        ResidentApartment contract = residentApartmentRepository.findById(contractId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hợp đồng với ID: " + contractId));
+
+        return mapToContractResponse(contract);
+    }
+
+    private ContractResponse mapToContractResponse(ResidentApartment ra) {
+        return ContractResponse.builder()
+                .id(ra.getId())
+                .roomNumber(ra.getApartment().getRoomNumber())
+                .residentName(ra.getResident().getFullName())
+                .citizenIdentity(ra.getResident().getCitizenIdentity())
+                .phone(ra.getResident().getPhone())
+                .role(ra.getRole())
+                .isHead(ra.getIsHead())
+                .rentalPrice(ra.getRentalPrice())
+                .depositAmount(ra.getDepositAmount())
+                .contractStart(ra.getContractStart())
+                .contractEnd(ra.getContractEnd())
+                .isActive(ra.getIsActive())
                 .build();
     }
 }

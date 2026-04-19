@@ -27,4 +27,6 @@ public interface ResidentService {
 
     List<ResidentListResponse> getResidentsByApartment(Long apartmentId);
 
+    // ResidentResponse getResidentByName(String name);
+
 }

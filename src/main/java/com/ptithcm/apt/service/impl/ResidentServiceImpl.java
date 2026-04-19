@@ -256,4 +256,10 @@ public class ResidentServiceImpl implements ResidentService {
                                 .collect(Collectors.toList());
         }
 
+        // public ResidentResponse getResidentByName(String name) {
+        // Resident resident = residentRepository.findByFullName(name)
+        // .orElseThrow(() -> new RuntimeException("Not Found Resident"));
+        // return new ResidentResponse(resident.getId(), resident.getFullName(),
+        // resident., null, name, name)
+        // }
 }
