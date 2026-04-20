@@ -3,7 +3,7 @@ package com.ptithcm.apt.dto.response;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record CreateMonthlyMetricResponse(
+public record MonthlyMetricResponse(
         Long id,
         Long apartmentId,
         String apartmentName,

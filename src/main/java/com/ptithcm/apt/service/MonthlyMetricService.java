@@ -1,9 +1,11 @@
 package com.ptithcm.apt.service;
 
 import com.ptithcm.apt.dto.request.CreateMonthlyMetricRequest;
-import com.ptithcm.apt.dto.response.CreateMonthlyMetricResponse;
+import com.ptithcm.apt.dto.response.PreviousMonthlyMetricResponse;
+import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
 
 public interface MonthlyMetricService {
 
-    CreateMonthlyMetricResponse createMonthlyMetric(CreateMonthlyMetricRequest req);
+    MonthlyMetricResponse createMonthlyMetric(CreateMonthlyMetricRequest req);
+    PreviousMonthlyMetricResponse getPreviousMonthlyMetric(Long apartmentId);
 }

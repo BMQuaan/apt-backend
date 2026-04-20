@@ -10,4 +10,5 @@ import com.ptithcm.apt.entity.MonthlyMetric;
 @Repository
 public interface MonthlyMetricRepository extends JpaRepository<MonthlyMetric, Long> {
     Optional<MonthlyMetric> findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(Long apartmentId);
+    
 }

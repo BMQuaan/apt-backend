@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #666666; /* text_body */
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #eeeeee;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .header {
+        background-color: #e67182; /* primary */
+        color: #ffffff;
+        padding: 30px 20px;
+        text-align: center;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .content {
+        padding: 30px;
+      }
+      h3 {
+        color: #1a1a1a; /* text_title */
+        margin-top: 0;
+      }
+      .bill-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+      }
+      .bill-table th {
+        text-align: left;
+        font-weight: 600;
+        color: #1a1a1a; /* text_title */
+        border-bottom: 2px solid #eb959d; /* secondary */
+        padding: 12px 8px;
+      }
+      .bill-table td {
+        padding: 15px 8px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .total-row {
+        font-weight: bold;
+        background-color: #fffafa;
+        color: #e67182; /* primary */
+      }
+      .total-row td {
+        border-bottom: none;
+        font-size: 18px;
+      }
+      .due-date-box {
+        background-color: #eb959d; /* secondary */
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .due-date-box strong {
+        font-size: 1.1em;
+      }
+      .note {
+        font-size: 0.85em;
+        font-style: italic;
+        color: #999999;
+        margin-top: 15px;
+      }
+      .footer {
+        padding: 20px;
+        background-color: #fcfcfc;
+        text-align: center;
+        font-size: 0.85em;
+        color: #666666; /* text_body */
+        border-top: 1px solid #eeeeee;
+      }
+      .btn {
+        display: inline-block;
+        padding: 12px 25px;
+        background-color: #e67182; /* primary */
+        color: white !important;
+        text-decoration: none;
+        border-radius: 25px;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Hóa Đơn Dịch Vụ</h2>
+      </div>
+
+      <div class="content">
+        <h3>Kính gửi Ông/Bà {{fullName}},</h3>
+        <p>
+          Ban quản lý căn hộ <strong>AptApp</strong> xin thông báo chi tiết phí
+          dịch vụ cho căn hộ <strong>{{roomNumber}}</strong> kỳ
+          <strong>{{month}}/{{year}}</strong>:
+        </p>
+
+        <table class="bill-table">
+          <thead>
+            <tr>
+              <th>Hạng mục</th>
+              <th style="text-align: right">Thành tiền (VND)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tiền điện tiêu thụ</td>
+              <td style="text-align: right">{{electricityFee}}đ</td>
+            </tr>
+            <tr>
+              <td>Tiền nước tiêu thụ</td>
+              <td style="text-align: right">{{waterFee}}đ</td>
+            </tr>
+            <tr>
+              <td>Phí quản lý</td>
+              <td style="text-align: right">{{managementFee}}đ</td>
+            </tr>
+            <tr>
+              <td>Phí vệ sinh</td>
+              <td style="text-align: right">{{sanitationFee}}đ</td>
+            </tr>
+            <tr class="total-row">
+              <td>TỔNG CỘNG</td>
+              <td style="text-align: right">{{totalAmount}}đ</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="due-date-box">
+          Hạn thanh toán: <strong>{{dueDate}}</strong>
+        </div>
+
+        <p class="note">
+          * Lưu ý: Đây là hóa đơn phí vận hành dịch vụ. Hóa đơn tiền thuê nhà
+          (nếu có) sẽ được gửi trong email riêng.
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>
+          <strong>Ban Quản Lý AptApp</strong><br />
+          Email: support@aptapp.com | Hotline: 1900 xxxx<br />
+          Cảm ơn quý cư dân đã sử dụng dịch vụ của chúng tôi!
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
