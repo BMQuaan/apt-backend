@@ -7,6 +7,7 @@ import com.ptithcm.apt.dto.request.UpdateResidentRequest;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
 import com.ptithcm.apt.entity.*;
+import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.repository.*;
 import com.ptithcm.apt.service.ResidentService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class ResidentServiceImpl implements ResidentService {
         private final ResidentApartmentRepository residentApartmentRepository;
         private final UserRepository userRepository;
         private final ApartmentRepository apartmentRepository;
+        private final BillRepository billRepository;
 
         @Override
         @Transactional
@@ -170,6 +172,13 @@ public class ResidentServiceImpl implements ResidentService {
         @Override
         @Transactional
         public void moveOutResident(Long residentId, Long apartmentId) {
+
+                boolean hasUnpaidBills = billRepository.existsByApartmentIdAndStatus(apartmentId, BillStatus.UNPAID);
+                if (hasUnpaidBills) {
+                        throw new RuntimeException(
+                                        "Không thể chuyển đi! Căn hộ này vẫn còn hóa đơn chưa thanh toán.");
+                }
+
                 ResidentApartment ra = residentApartmentRepository
                                 .findByResidentIdAndApartmentIdAndIsActiveTrue(residentId, apartmentId)
                                 .orElseThrow(() -> new RuntimeException(
@@ -255,11 +264,4 @@ public class ResidentServiceImpl implements ResidentService {
                                 .build())
                                 .collect(Collectors.toList());
         }
-
-        // public ResidentResponse getResidentByName(String name) {
-        // Resident resident = residentRepository.findByFullName(name)
-        // .orElseThrow(() -> new RuntimeException("Not Found Resident"));
-        // return new ResidentResponse(resident.getId(), resident.getFullName(),
-        // resident., null, name, name)
-        // }
 }

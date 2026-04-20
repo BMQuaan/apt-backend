@@ -40,4 +40,6 @@ public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificat
                         "JOIN Resident r ON r.id = ra.resident.id " +
                         "WHERE b.id = :billId AND r.user.id = :userId AND ra.isActive = true")
         Optional<Bill> findByIdAndUserId(@Param("billId") Long billId, @Param("userId") Long userId);
+
+        boolean existsByApartmentIdAndStatus(Long apartmentId, BillStatus status);
 }

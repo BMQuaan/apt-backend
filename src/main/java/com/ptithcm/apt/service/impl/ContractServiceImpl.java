@@ -184,6 +184,8 @@ public class ContractServiceImpl implements ContractService {
     private ContractResponse mapToContractResponse(ResidentApartment ra) {
         return ContractResponse.builder()
                 .id(ra.getId())
+                .residentId(ra.getResident().getId())
+                .apartmentId(ra.getApartment().getId())
                 .roomNumber(ra.getApartment().getRoomNumber())
                 .residentName(ra.getResident().getFullName())
                 .citizenIdentity(ra.getResident().getCitizenIdentity())

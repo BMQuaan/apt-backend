@@ -55,6 +55,7 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
         Page<ResidentApartment> findByApartment_RoomNumberContainingIgnoreCase(String roomNumber, Pageable pageable);
 
         @Query("SELECT ra FROM ResidentApartment ra WHERE ra.isActive = true " +
+                        "AND ra.isHead = true " +
                         "AND (:role IS NULL OR :role = '' OR ra.role = :role) " +
                         "AND (:keyword IS NULL OR :keyword = '' " +
                         "    OR LOWER(ra.apartment.roomNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) " +

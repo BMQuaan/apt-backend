@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @Builder
 public class ContractResponse {
     private Long id; // ID của bảng resident_apartments
+    private Long residentId;
+    private Long apartmentId;
     private String roomNumber;
     private String residentName;
     private String citizenIdentity;
