@@ -1,5 +1,6 @@
 package com.ptithcm.apt.repository;
 
+import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
 import org.springframework.data.domain.Page;
@@ -65,4 +66,12 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
                         @Param("role") String role,
                         Pageable pageable);
 
+        @Query("SELECT ra FROM ResidentApartment ra WHERE ra.isActive = true " +
+                        "AND (:keyword IS NULL OR :keyword = '' " +
+                        "    OR LOWER(ra.apartment.roomNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                        "    OR LOWER(ra.resident.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                        "    OR LOWER(ra.resident.citizenIdentity) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+        Page<ResidentApartment> searchAllActiveResidents(@Param("keyword") String keyword, Pageable pageable);
+
+        Optional<ResidentApartment> findByResidentIdAndIsActiveTrue(Long residentId);
 }

@@ -3,6 +3,7 @@ package com.ptithcm.apt.controller;
 import com.ptithcm.apt.dto.request.MemberRequest;
 import com.ptithcm.apt.dto.request.ResidentRequest;
 import com.ptithcm.apt.dto.request.UpdateResidentRequest;
+import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
 import com.ptithcm.apt.service.ResidentService; // Inject Interface
@@ -27,22 +28,23 @@ public class ResidentController {
     private final ResidentService residentService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/apartments/{apartmentId}/members")
+    @PostMapping("/apartments/{roomNumber}/members")
     public ResponseEntity<ResidentResponse> addMemberToApartment(
-            @PathVariable Long apartmentId,
+            @PathVariable String roomNumber,
             @Valid @RequestBody MemberRequest request) {
-        ResidentResponse response = residentService.addMemberToApartment(apartmentId, request);
+        ResidentResponse response = residentService.addMemberToApartment(roomNumber, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+
     @GetMapping
     public ResponseEntity<Page<ResidentListResponse>> getResidents(
-            @RequestParam(required = false) String roomNumber,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(residentService.getActiveResidents(roomNumber, pageable));
+        return ResponseEntity.ok(residentService.getActiveResidents(keyword, pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -56,11 +58,10 @@ public class ResidentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<ResidentResponse> updateResident(
+    public ResponseEntity<ResidentDetailResponse> updateResident(
             @PathVariable("id") Long residentId,
             @Valid @RequestBody UpdateResidentRequest request) {
-
-        ResidentResponse response = residentService.updateResident(residentId, request);
+        ResidentDetailResponse response = residentService.updateResident(residentId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -68,5 +69,11 @@ public class ResidentController {
     public ResponseEntity<List<ResidentListResponse>> getResidentsInApartment(@PathVariable Long apartmentId) {
         List<ResidentListResponse> responses = residentService.getResidentsByApartment(apartmentId);
         return ResponseEntity.ok(responses);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ResidentDetailResponse> getResidentDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(residentService.getResidentDetailById(id));
     }
 }
