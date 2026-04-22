@@ -5,12 +5,8 @@ import java.util.List;
 
 @Builder
 public record ProfileDashboardResponse(
-        ProfileInfoResponse personalInfo,
-<<<<<<< HEAD
-        List<ProfileApartmentResponse> livingApartments,
-=======
-        ProfileApartmentResponse livingApartment,
->>>>>>> main
-        List<ProfileApartmentResponse> ownedApartments,
-        List<FamilyMemberResponse> familyMembers
-) {}
+                ProfileInfoResponse personalInfo,
+                ProfileApartmentResponse livingApartment,
+                List<ProfileApartmentResponse> ownedApartments,
+                List<FamilyMemberResponse> familyMembers) {
+}

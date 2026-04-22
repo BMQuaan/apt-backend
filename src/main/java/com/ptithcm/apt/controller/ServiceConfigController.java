@@ -22,11 +22,7 @@ public class ServiceConfigController {
 
     private final ServiceConfigService serviceConfigService;
 
-<<<<<<< HEAD
-    @PostMapping("/update-price")
-=======
     @PostMapping("/upcoming")
->>>>>>> main
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> updatePrices(
             @Valid @RequestBody ServicePriceUpdateRequest request) {
@@ -37,11 +33,7 @@ public class ServiceConfigController {
 
     @GetMapping("/admin-dashboard")
     @PreAuthorize("hasRole('ADMIN')")
-<<<<<<< HEAD
-    public ResponseEntity<ApiResponse<List<AdminServiceConfigResponse>>> getAdminDashboardPrices() {
-=======
     public ResponseEntity<ApiResponse<List<AdminServiceConfigResponse>>> getAdminServiceConfigs() {
->>>>>>> main
 
         List<AdminServiceConfigResponse> prices = serviceConfigService.getAdminDashboardPrices();
         return ResponseEntity.ok(ApiResponse.success(prices, "Lấy danh sách bảng giá Dashboard thành công"));
@@ -57,24 +49,15 @@ public class ServiceConfigController {
     // thành công"));
     // }
 
-<<<<<<< HEAD
-    @DeleteMapping("/cancel-update/{serviceCode}")
-=======
     @DeleteMapping("/{serviceCode}/upcoming")
->>>>>>> main
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> cancelUpdate(@PathVariable String serviceCode) {
         serviceConfigService.cancelUpcomingUpdate(serviceCode);
         return ResponseEntity.ok(ApiResponse.success(null, "Đã hủy lịch cập nhật giá cho dịch vụ: " + serviceCode));
     }
 
-<<<<<<< HEAD
-    @GetMapping("/prices-by-date")
-    public ResponseEntity<ApiResponse<List<ServiceConfigResponse>>> getPricesByDate(
-=======
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<ServiceConfigResponse>>> getServicePricesByDate(
->>>>>>> main
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate) {
 
         List<ServiceConfigResponse> prices = serviceConfigService.getPricesByDate(targetDate);

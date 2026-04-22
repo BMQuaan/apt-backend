@@ -1,19 +1,13 @@
 package com.ptithcm.apt.repository;
 
-<<<<<<< HEAD
-=======
 import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.entity.Resident;
->>>>>>> main
 import com.ptithcm.apt.entity.ResidentApartment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-<<<<<<< HEAD
-=======
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
->>>>>>> main
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,34 +16,6 @@ import java.util.Optional;
 @Repository
 public interface ResidentApartmentRepository extends JpaRepository<ResidentApartment, Long> {
 
-<<<<<<< HEAD
-    Page<ResidentApartment> findByApartment_RoomNumberContainingIgnoreCaseAndIsActiveTrue(String roomNumber,
-            Pageable pageable);
-
-    Optional<ResidentApartment> findByResidentIdAndApartmentIdAndIsActiveTrue(Long residentId, Long apartmentId);
-
-    long countByApartmentIdAndIsActiveTrue(Long apartmentId);
-
-    Page<ResidentApartment> findByIsActiveTrue(Pageable pageable);
-
-    // Lấy danh sách cư dân đang ở trong 1 phòng
-    List<ResidentApartment> findByApartmentIdAndIsActiveTrue(Long apartmentId);
-
-    // Kiểm tra xem phòng này đã có người đứng tên thuê (TENANT) đang active chưa
-    boolean existsByApartmentIdAndRoleAndIsActiveTrue(Long apartmentId, String role);
-
-    boolean existsByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId);
-
-    boolean existsByResidentIdAndIsActiveTrue(Long residentId);
-
-    // Lấy tất cả các hợp đồng/quan hệ với căn hộ đang còn hiệu lực của 1 cư dân
-    List<ResidentApartment> findByResident_IdAndIsActiveTrue(Long residentId);
-
-    // Lấy tất cả người đang ở trong 1 căn hộ (còn hiệu lực)
-    List<ResidentApartment> findByApartment_IdAndIsActiveTrue(Long apartmentId);
-
-    Optional<ResidentApartment> findByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId);
-=======
         Page<ResidentApartment> findByApartment_RoomNumberContainingIgnoreCaseAndIsActiveTrue(String roomNumber,
                         Pageable pageable);
 
@@ -108,5 +74,4 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
         Page<ResidentApartment> searchAllActiveResidents(@Param("keyword") String keyword, Pageable pageable);
 
         Optional<ResidentApartment> findByResidentIdAndIsActiveTrue(Long residentId);
->>>>>>> main
 }

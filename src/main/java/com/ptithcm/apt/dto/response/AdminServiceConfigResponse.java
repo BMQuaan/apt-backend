@@ -6,18 +6,6 @@ import java.time.LocalDate;
 
 @Builder
 public record AdminServiceConfigResponse(
-<<<<<<< HEAD
-        String serviceCode,
-        String serviceName,
-        String unit,
-
-        BigDecimal currentPrice,
-        LocalDate currentEffectiveFrom,
-
-        BigDecimal upcomingPrice,
-        LocalDate upcomingEffectiveFrom
-) {}
-=======
                 String serviceCode,
                 String serviceName,
                 String unit,
@@ -28,4 +16,3 @@ public record AdminServiceConfigResponse(
                 BigDecimal upcomingPrice,
                 LocalDate upcomingEffectiveFrom) {
 }
->>>>>>> main

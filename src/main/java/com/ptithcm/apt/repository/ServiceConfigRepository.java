@@ -14,27 +14,6 @@ public interface ServiceConfigRepository extends JpaRepository<ServiceConfig, Lo
 
     // Tìm giá đang áp dụng (<= ngày hiện tại)
     @Query(value = """
-<<<<<<< HEAD
-        SELECT * FROM service_configs 
-        WHERE service_code = :serviceCode AND effective_from <= :currentDate 
-        ORDER BY effective_from DESC, updated_at DESC LIMIT 1
-    """, nativeQuery = true)
-    Optional<ServiceConfig> findCurrentConfig(@Param("serviceCode") String serviceCode, @Param("currentDate") LocalDate currentDate);
-
-    // Tìm giá chờ cập nhật trong tương lai (> ngày hiện tại)
-    @Query(value = """
-        SELECT * FROM service_configs 
-        WHERE service_code = :serviceCode AND effective_from > :currentDate 
-        ORDER BY effective_from ASC LIMIT 1
-    """, nativeQuery = true)
-    Optional<ServiceConfig> findUpcomingConfig(@Param("serviceCode") String serviceCode, @Param("currentDate") LocalDate currentDate);
-
-    @Query(value = """
-        SELECT DISTINCT ON (service_code) * FROM service_configs 
-        WHERE effective_from <= :targetDate 
-        ORDER BY service_code, effective_from DESC, updated_at DESC
-    """, nativeQuery = true)
-=======
                 SELECT * FROM service_configs
                 WHERE service_code = :serviceCode AND effective_from <= :currentDate
                 ORDER BY effective_from DESC, updated_at DESC LIMIT 1
@@ -56,13 +35,10 @@ public interface ServiceConfigRepository extends JpaRepository<ServiceConfig, Lo
                 WHERE effective_from <= :targetDate
                 ORDER BY service_code, effective_from DESC, updated_at DESC
             """, nativeQuery = true)
->>>>>>> main
     List<ServiceConfig> findAllConfigsActiveOnDate(@Param("targetDate") LocalDate targetDate);
 
     @Query("SELECT DISTINCT s.serviceCode FROM ServiceConfig s")
     List<String> findDistinctServiceCodes();
-<<<<<<< HEAD
-=======
 
     @Query("SELECT s FROM ServiceConfig s " +
             "WHERE s.id IN (" +
@@ -71,5 +47,4 @@ public interface ServiceConfigRepository extends JpaRepository<ServiceConfig, Lo
             "  GROUP BY s2.serviceCode" +
             ")")
     List<ServiceConfig> findAllCurrentConfigs();
->>>>>>> main
 }
