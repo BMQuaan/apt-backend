@@ -15,7 +15,7 @@ public interface ProfileService {
     // 2. Các API lẻ
     ProfileInfoResponse getMyProfile();
 
-    List<ProfileApartmentResponse> getLivingApartments();
+    ProfileApartmentResponse getLivingApartment();
 
     List<ProfileApartmentResponse> getOwnedApartments();
 

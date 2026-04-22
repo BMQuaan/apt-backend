@@ -32,14 +32,15 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "Cấp lại token thành công"));
     }
 
-    //==============================
+    // ==============================
 
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
 
         authService.forgotPassword(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư."));
+        return ResponseEntity
+                .ok(ApiResponse.success(null, "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư."));
     }
 
     @PostMapping("/verify-otp")
@@ -50,15 +51,16 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(resetToken, "Xác thực OTP thành công."));
     }
 
-    @PostMapping("/reset-password")
+    @PatchMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
 
         authService.resetPassword(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "Đổi mật khẩu thành công. Bạn có thể sử dụng mật khẩu mới để đăng nhập."));
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "Đổi mật khẩu thành công. Bạn có thể sử dụng mật khẩu mới để đăng nhập."));
     }
 
-    @PostMapping("/change-password")
+    @PatchMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request) {
 

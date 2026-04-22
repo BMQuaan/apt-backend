@@ -48,7 +48,11 @@ public class ProfileServiceImpl implements ProfileService {
 
         return ProfileDashboardResponse.builder()
                 .personalInfo(buildProfileInfo(resident))
+<<<<<<< HEAD
                 .livingApartments(extractLivingApartments(activeApartments))
+=======
+                .livingApartment(extractLivingApartment(activeApartments))
+>>>>>>> main
                 .ownedApartments(extractOwnedApartments(activeApartments))
                 .familyMembers(extractFamilyMembers(resident, activeApartments))
                 .build();
@@ -61,10 +65,17 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+<<<<<<< HEAD
     public List<ProfileApartmentResponse> getLivingApartments() {
         Resident resident = getCurrentResident();
         List<ResidentApartment> activeApartments = residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId());
         return extractLivingApartments(activeApartments);
+=======
+    public ProfileApartmentResponse getLivingApartment() {
+        Resident resident = getCurrentResident();
+        List<ResidentApartment> activeApartments = residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId());
+        return extractLivingApartment(activeApartments);
+>>>>>>> main
     }
 
     @Override
@@ -96,11 +107,20 @@ public class ProfileServiceImpl implements ProfileService {
                 .build();
     }
 
+<<<<<<< HEAD
     private List<ProfileApartmentResponse> extractLivingApartments(List<ResidentApartment> activeApartments) {
         return activeApartments.stream()
                 .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole()) || ("OWNER".equals(ra.getRole()) && ra.getIsHead()))
                 .map(this::mapToApartmentResponse)
                 .toList();
+=======
+    private ProfileApartmentResponse extractLivingApartment(List<ResidentApartment> activeApartments) {
+        return activeApartments.stream()
+                .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole()) || ("OWNER".equals(ra.getRole()) && ra.getIsHead()))
+                .findFirst()
+                .map(this::mapToApartmentResponse)
+                .orElse(null);
+>>>>>>> main
     }
 
     private List<ProfileApartmentResponse> extractOwnedApartments(List<ResidentApartment> activeApartments) {
@@ -111,6 +131,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private List<FamilyMemberResponse> extractFamilyMembers(Resident resident, List<ResidentApartment> myActiveLinks) {
+<<<<<<< HEAD
         List<Long> myLivingApartmentIds = myActiveLinks.stream()
                 .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole()) || ra.getIsHead())
                 .map(ra -> ra.getApartment().getId())
@@ -139,6 +160,41 @@ public class ProfileServiceImpl implements ProfileService {
                 }
             }
         }
+=======
+        Long livingAptId = myActiveLinks.stream()
+                .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole()) || ra.getIsHead())
+                .map(ra -> ra.getApartment().getId())
+                .findFirst()
+                .orElse(null);
+
+        if (livingAptId == null) {
+            return List.of();
+        }
+
+        // livingAptId != null
+        List<FamilyMemberResponse> familyMembers = new ArrayList<>();
+
+        List<ResidentApartment> aptResidents = residentApartmentRepository.findByApartment_IdAndIsActiveTrue(livingAptId);
+
+        for (ResidentApartment aptRes : aptResidents) {
+            if (aptRes.getResident().getId().equals(resident.getId())) continue;
+
+            boolean isAlreadyAdded = familyMembers.stream()
+                    .anyMatch(member -> member.residentId().equals(aptRes.getResident().getId()));
+
+            if (!isAlreadyAdded) {
+                familyMembers.add(FamilyMemberResponse.builder()
+                        .residentId(aptRes.getResident().getId())
+                        .fullName(aptRes.getResident().getFullName())
+                        .phone(aptRes.getResident().getPhone())
+                        .dob(aptRes.getResident().getDob())
+                        .role(aptRes.getRole())
+                        .isHead(aptRes.getIsHead())
+                        .build());
+            }
+        }
+
+>>>>>>> main
         return familyMembers;
     }
 
@@ -152,6 +208,11 @@ public class ProfileServiceImpl implements ProfileService {
                 .isHead(ra.getIsHead())
                 .contractStart(ra.getContractStart())
                 .contractEnd(ra.getContractEnd())
+<<<<<<< HEAD
+=======
+                .rentalPrice(ra.getRentalPrice())
+                .depositAmount(ra.getDepositAmount())
+>>>>>>> main
                 .build();
     }
 }

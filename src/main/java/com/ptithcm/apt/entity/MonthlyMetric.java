@@ -47,4 +47,12 @@ public class MonthlyMetric {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public BigDecimal getElectricityUsage() {
+        return electricityNew.subtract(electricityOld);
+    }
+
+    public BigDecimal getWaterUsage() {
+        return waterNew.subtract(waterOld);
+    }
 }

@@ -11,6 +11,7 @@ import com.ptithcm.apt.enums.BillStatus;
 import jakarta.persistence.criteria.Predicate;
 
 public class BillSpecifications {
+
     public static Specification<Bill> hasFilters(Integer month, Integer year, Long apartmentId, BillStatus status) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -31,4 +32,5 @@ public class BillSpecifications {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 }

@@ -3,7 +3,8 @@ package com.ptithcm.apt.dto.request;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import jakarta.validation.constraints.Email;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class ContractRequest {
     private String fullName;
 
     @NotNull
+    @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate dob;
 
     @Pattern(regexp = "^\\d{10}$", message = "Số điện thoại phải có 10 chữ số")
