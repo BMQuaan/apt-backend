@@ -44,7 +44,8 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileDashboardResponse getProfileDashboard() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentRepository
+                .findByResident_IdAndIsActiveTrue(resident.getId());
 
         return ProfileDashboardResponse.builder()
                 .personalInfo(buildProfileInfo(resident))
@@ -63,21 +64,24 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileApartmentResponse getLivingApartment() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentRepository
+                .findByResident_IdAndIsActiveTrue(resident.getId());
         return extractLivingApartment(activeApartments);
     }
 
     @Override
     public List<ProfileApartmentResponse> getOwnedApartments() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentRepository
+                .findByResident_IdAndIsActiveTrue(resident.getId());
         return extractOwnedApartments(activeApartments);
     }
 
     @Override
     public List<FamilyMemberResponse> getFamilyMembers() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentRepository
+                .findByResident_IdAndIsActiveTrue(resident.getId());
         return extractFamilyMembers(resident, activeApartments);
     }
 
@@ -98,7 +102,8 @@ public class ProfileServiceImpl implements ProfileService {
 
     private ProfileApartmentResponse extractLivingApartment(List<ResidentApartment> activeApartments) {
         return activeApartments.stream()
-                .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole()) || ("OWNER".equals(ra.getRole()) && ra.getIsHead()))
+                .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole())
+                        || ("OWNER".equals(ra.getRole()) && ra.getIsHead()))
                 .findFirst()
                 .map(this::mapToApartmentResponse)
                 .orElse(null);
@@ -125,10 +130,12 @@ public class ProfileServiceImpl implements ProfileService {
         // livingAptId != null
         List<FamilyMemberResponse> familyMembers = new ArrayList<>();
 
-        List<ResidentApartment> aptResidents = residentApartmentRepository.findByApartment_IdAndIsActiveTrue(livingAptId);
+        List<ResidentApartment> aptResidents = residentApartmentRepository
+                .findByApartment_IdAndIsActiveTrue(livingAptId);
 
         for (ResidentApartment aptRes : aptResidents) {
-            if (aptRes.getResident().getId().equals(resident.getId())) continue;
+            if (aptRes.getResident().getId().equals(resident.getId()))
+                continue;
 
             boolean isAlreadyAdded = familyMembers.stream()
                     .anyMatch(member -> member.residentId().equals(aptRes.getResident().getId()));

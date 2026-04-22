@@ -6,14 +6,14 @@ import java.time.LocalDate;
 
 @Builder
 public record ProfileApartmentResponse(
-        Long apartmentId,
-        String roomNumber,
-        Integer floor,
-        BigDecimal area,
-        String role, // OWNER, TENANT, MEMBER
-        Boolean isHead,
-        LocalDate contractStart,
-        LocalDate contractEnd,
-        BigDecimal rentalPrice,
-        BigDecimal depositAmount
-) {}
+                Long apartmentId,
+                String roomNumber,
+                Integer floor,
+                BigDecimal area,
+                String role, // OWNER, TENANT, MEMBER
+                Boolean isHead,
+                LocalDate contractStart,
+                LocalDate contractEnd,
+                BigDecimal rentalPrice,
+                BigDecimal depositAmount) {
+}
