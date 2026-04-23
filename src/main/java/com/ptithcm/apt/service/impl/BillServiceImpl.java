@@ -202,25 +202,35 @@ public class BillServiceImpl implements BillService {
                 Bill bill = billRepository.findById(billId)
                                 .orElseThrow(() -> new RuntimeException("Bill not found"));
 
+                BillStatus currentStatus = bill.getStatus();
                 BillStatus newStatus = req.status();
 
                 if (newStatus == BillStatus.LATE) {
-                        throw new RuntimeException("Can not change to LATE");
+                        throw new RuntimeException("Cannot manually change status to LATE");
                 }
 
-                if (bill.getStatus().equals(newStatus)) {
-                        throw new RuntimeException("Can not change to the same status");
+                if (newStatus != BillStatus.PAID) {
+                        throw new RuntimeException("API only supports updating status to PAID");
                 }
 
-                bill.setStatus(newStatus);
-                if (newStatus == BillStatus.PAID) {
-                        bill.setPaidAt(LocalDateTime.now());
-                        bill.setConfirmedBy(userRepository.findByUsername(SecurityUtils.getCurrentUsername())
-                                        .orElseThrow(() -> new RuntimeException("User not found")));
+                if (currentStatus == BillStatus.PAID) {
+                        throw new RuntimeException("Bill is already PAID");
                 }
+
+                if (currentStatus != BillStatus.UNPAID && currentStatus != BillStatus.LATE) {
+                        throw new RuntimeException("Cannot pay bill with current status: " + currentStatus);
+                }
+
+                bill.setStatus(BillStatus.PAID);
+                bill.setPaidAt(LocalDateTime.now());
+
+                String username = SecurityUtils.getCurrentUsername();
+                User currentUser = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Authenticated user " + username + " not found"));
+                bill.setConfirmedBy(currentUser);
 
                 billRepository.save(bill);
-
                 return billMapper.toUpdateBillStatusResponse(bill);
         }
 

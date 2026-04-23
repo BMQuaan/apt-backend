@@ -21,7 +21,7 @@ public class MonthlyMetricController {
     private final MonthlyMetricService monthlyMetricService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/monthlymetrics")
+    @GetMapping("/admin/monthly-metrics")
     public ResponseEntity<ApiResponse<PreviousMonthlyMetricResponse>> getPreviousMonthlyMetric(
             @RequestParam("apartmentId") Long apartmentId) {
         PreviousMonthlyMetricResponse res = monthlyMetricService.getPreviousMonthlyMetric(apartmentId);
