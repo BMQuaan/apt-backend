@@ -53,8 +53,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
+                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new NotFoundException("User không tồn tại"));
@@ -120,7 +119,8 @@ public class AuthServiceImpl implements AuthService {
 
     private void revokeTokensByDeviceType(User user, String deviceType) {
         List<Token> validTokens = tokenRepository.findAllValidTokenByUserAndDeviceType(user.getId(), deviceType);
-        if (validTokens.isEmpty()) return;
+        if (validTokens.isEmpty())
+            return;
 
         validTokens.forEach(token -> token.setRevoked(true));
         tokenRepository.saveAll(validTokens);
@@ -162,15 +162,15 @@ public class AuthServiceImpl implements AuthService {
         String userAgent = request.getHeader("User-Agent");
         if (userAgent != null) {
             String ua = userAgent.toLowerCase();
-            if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone") || ua.contains("ipad") || ua.contains("okhttp")) {
+            if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone") || ua.contains("ipad")
+                    || ua.contains("okhttp")) {
                 return "MOBILE";
             }
         }
         return "WEB";
     }
 
-    //=====================================================
-
+    // =====================================================
 
     @Override
     @Transactional
@@ -231,7 +231,8 @@ public class AuthServiceImpl implements AuthService {
                 throw new RuntimeException("Nhập sai quá 5 lần. Yêu cầu khôi phục mật khẩu đã bị hủy.");
             }
             otpRepository.save(activeOtp);
-            throw new RuntimeException("Mã OTP không chính xác. Bạn còn " + (5 - activeOtp.getAttemptCount()) + " lần thử.");
+            throw new RuntimeException(
+                    "Mã OTP không chính xác. Bạn còn " + (5 - activeOtp.getAttemptCount()) + " lần thử.");
         }
 
         String rawResetToken = "reset_" + UUID.randomUUID().toString();
@@ -294,8 +295,6 @@ public class AuthServiceImpl implements AuthService {
 
         // revokeAllUserTokens(user);
     }
-
-
 
     private String generateSecureOtp() {
         SecureRandom random = new SecureRandom();

@@ -8,10 +8,9 @@ import lombok.Builder;
 
 @Builder
 public record ServiceConfigResponse(
-        String serviceCode,
-        String serviceName,
-        BigDecimal unitPrice,
-        String unit,
-        LocalDate effectiveFrom,
-        LocalDateTime updatedAt) {
+                String serviceCode,
+                String serviceName,
+                BigDecimal unitPrice,
+                String unit,
+                LocalDate effectiveFrom) {
 }

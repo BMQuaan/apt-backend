@@ -4,9 +4,11 @@ import com.ptithcm.apt.dto.request.ContractRequest;
 import com.ptithcm.apt.dto.request.MemberRequest;
 import com.ptithcm.apt.dto.request.ResidentRequest;
 import com.ptithcm.apt.dto.request.UpdateResidentRequest;
+import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
 import com.ptithcm.apt.entity.*;
+import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.repository.*;
 import com.ptithcm.apt.service.ResidentService;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +36,11 @@ public class ResidentServiceImpl implements ResidentService {
         private final ResidentApartmentRepository residentApartmentRepository;
         private final UserRepository userRepository;
         private final ApartmentRepository apartmentRepository;
+        private final BillRepository billRepository;
 
         @Override
         @Transactional
-        public ResidentResponse addMemberToApartment(Long apartmentId, MemberRequest request) {
+        public ResidentResponse addMemberToApartment(String roomNumber, MemberRequest request) {
 
                 if (residentRepository.existsByEmail(request.getEmail())) {
                         throw new RuntimeException("Email này đã tồn tại trong hệ thống!");
@@ -45,11 +48,11 @@ public class ResidentServiceImpl implements ResidentService {
                 if (residentRepository.existsByCitizenIdentity(request.getCitizenIdentity())) {
                         throw new RuntimeException("Căn cước công dân này đã tồn tại trong hệ thống!");
                 }
-                Apartment apartment = apartmentRepository.findById(apartmentId)
-                                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với ID: " + apartmentId));
+                Apartment apartment = apartmentRepository.findByRoomNumber(roomNumber)
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với ID: " + roomNumber));
 
                 ResidentApartment headContract = residentApartmentRepository
-                                .findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apartmentId)
+                                .findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apartment.getId())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Phòng này chưa có người thuê/chủ hộ, không thể thêm thành viên ở ghép!"));
 
@@ -86,8 +89,33 @@ public class ResidentServiceImpl implements ResidentService {
         }
 
         @Override
+        @Transactional(readOnly = true)
+        public ResidentDetailResponse getResidentDetailById(Long residentId) {
+                Resident resident = residentRepository.findById(residentId)
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân!"));
+
+                ResidentApartment activeRa = residentApartmentRepository
+                                .findByResidentIdAndIsActiveTrue(residentId)
+                                .stream().findFirst().orElse(null);
+
+                return ResidentDetailResponse.builder()
+                                .id(resident.getId())
+                                .fullName(resident.getFullName())
+                                .citizenIdentity(resident.getCitizenIdentity())
+                                .dob(resident.getDob())
+                                .phone(resident.getPhone())
+                                .email(resident.getEmail())
+                                // Dữ liệu phòng (nếu họ đang ở)
+                                .apartmentId(activeRa != null ? activeRa.getApartment().getId() : null)
+                                .roomNumber(activeRa != null ? activeRa.getApartment().getRoomNumber() : null)
+                                .role(activeRa != null ? activeRa.getRole() : null)
+                                .isHead(activeRa != null ? activeRa.getIsHead() : null)
+                                .build();
+        }
+
+        @Override
         @Transactional
-        public ResidentResponse updateResident(Long residentId, UpdateResidentRequest request) {
+        public ResidentDetailResponse updateResident(Long residentId, UpdateResidentRequest request) {
                 Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân!"));
 
@@ -132,28 +160,14 @@ public class ResidentServiceImpl implements ResidentService {
 
                 Resident updatedResident = residentRepository.save(resident);
 
-                return ResidentResponse.builder()
-                                .id(updatedResident.getId())
-                                .fullName(updatedResident.getFullName())
-                                .citizenIdentity(updatedResident.getCitizenIdentity())
-                                .dob(updatedResident.getDob())
-                                .phone(updatedResident.getPhone())
-                                .email(updatedResident.getEmail())
-                                .build();
+                return getResidentDetailById(updatedResident.getId());
         }
 
         @Override
         @Transactional(readOnly = true)
-        public Page<ResidentListResponse> getActiveResidents(String roomNumber, Pageable pageable) {
-                Page<ResidentApartment> pageData;
-
-                if (roomNumber != null && !roomNumber.isBlank()) {
-                        pageData = residentApartmentRepository
-                                        .findByApartment_RoomNumberContainingIgnoreCaseAndIsActiveTrue(roomNumber,
-                                                        pageable);
-                } else {
-                        pageData = residentApartmentRepository.findByIsActiveTrue(pageable);
-                }
+        public Page<ResidentListResponse> getActiveResidents(String keyword, Pageable pageable) {
+                Page<ResidentApartment> pageData = residentApartmentRepository.searchAllActiveResidents(keyword,
+                                pageable);
 
                 return pageData.map(ra -> ResidentListResponse.builder()
                                 .residentId(ra.getResident().getId())
@@ -170,36 +184,48 @@ public class ResidentServiceImpl implements ResidentService {
         @Override
         @Transactional
         public void moveOutResident(Long residentId, Long apartmentId) {
+                boolean hasUnpaidBills = billRepository.existsByApartmentIdAndStatus(apartmentId, BillStatus.UNPAID);
+                if (hasUnpaidBills) {
+                        throw new RuntimeException("Không thể chuyển đi! Căn hộ này vẫn còn hóa đơn chưa thanh toán.");
+                }
+
                 ResidentApartment ra = residentApartmentRepository
                                 .findByResidentIdAndApartmentIdAndIsActiveTrue(residentId, apartmentId)
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Không tìm thấy thông tin cư trú hợp lệ để chuyển đi!"));
 
-                ra.setIsActive(false);
-                ra.setContractEnd(LocalDate.now());
-                residentApartmentRepository.save(ra);
-
-                if ("TENANT".equals(ra.getRole())) {
-                        List<ResidentApartment> remainingMembers = residentApartmentRepository
+                if (ra.getIsHead()) {
+                        List<ResidentApartment> allMembers = residentApartmentRepository
                                         .findByApartmentIdAndIsActiveTrue(apartmentId);
-                        for (ResidentApartment member : remainingMembers) {
+                        for (ResidentApartment member : allMembers) {
                                 member.setIsActive(false);
                                 member.setContractEnd(LocalDate.now());
-                        }
-                        residentApartmentRepository.saveAll(remainingMembers);
-                }
 
-                long activeCount = residentApartmentRepository.countByApartmentIdAndIsActiveTrue(apartmentId);
-                if (activeCount == 0) {
+                                // Kiểm tra và khóa tài khoản cho từng người
+                                disableUserAccountIfNoActiveRoom(member.getResident());
+                        }
+                        residentApartmentRepository.saveAll(allMembers);
+
+                        // Trả phòng về trạng thái trống (AVAILABLE)
                         Apartment apartment = ra.getApartment();
                         apartment.setStatus("AVAILABLE");
                         apartmentRepository.save(apartment);
-                }
 
+                } else {
+
+                        ra.setIsActive(false);
+                        ra.setContractEnd(LocalDate.now());
+                        residentApartmentRepository.save(ra);
+
+                        // Kiểm tra và khóa tài khoản của riêng người này
+                        disableUserAccountIfNoActiveRoom(ra.getResident());
+                }
+        }
+
+        private void disableUserAccountIfNoActiveRoom(Resident resident) {
                 boolean stillHasOtherApartment = residentApartmentRepository
-                                .existsByResidentIdAndIsActiveTrue(residentId);
+                                .existsByResidentIdAndIsActiveTrue(resident.getId());
                 if (!stillHasOtherApartment) {
-                        Resident resident = ra.getResident();
                         User user = resident.getUser();
                         if (user != null && user.getIsActive()) {
                                 user.setIsActive(false);
@@ -255,5 +281,4 @@ public class ResidentServiceImpl implements ResidentService {
                                 .build())
                                 .collect(Collectors.toList());
         }
-
 }

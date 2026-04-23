@@ -44,4 +44,6 @@ public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificat
         Optional<Bill> findByIdAndUserId(@Param("billId") Long billId, @Param("userId") Long userId);
 
         List<Bill> findAllByStatusAndDueDateBefore(BillStatus status, LocalDateTime dueDate);
+
+        boolean existsByApartmentIdAndStatus(Long apartmentId, BillStatus status);
 }
