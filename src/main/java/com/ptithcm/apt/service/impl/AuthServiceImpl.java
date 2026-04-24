@@ -122,13 +122,11 @@ public class AuthServiceImpl implements AuthService {
                     throw new RuntimeException("Tài khoản này đã được liên kết với một hồ sơ Google khác.");
                 }
 
-                // Logic tạo Token và cấp phiên giống y hệt hàm login() bình thường
                 String jwtToken = jwtService.generateAccessToken(user);
                 String refreshToken = jwtService.generateRefreshToken(user);
 
                 String deviceType = getDeviceType(httpRequest);
 
-                // Thu hồi token cũ của thiết bị hiện tại & Lưu token mới (đã băm) vào DB
                 revokeTokensByDeviceType(user, deviceType);
                 saveUserToken(user, refreshToken, deviceType);
 
