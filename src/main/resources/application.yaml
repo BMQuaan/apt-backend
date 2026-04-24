@@ -27,6 +27,10 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+google:
+  client:
+    id: ${GOOGLE_CLIENT_ID}
+
 app:
   jwt:
     secret: "182865cbe7b41daf860ce70519348a829091e65ede99cc11e07975fc219ff642"

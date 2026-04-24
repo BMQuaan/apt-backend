@@ -1,5 +1,10 @@
 package com.ptithcm.apt.service.impl;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.ptithcm.apt.dto.GoogleLoginRequest;
 import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.TokenResponse;
 import com.ptithcm.apt.entity.Otp;
@@ -30,10 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +51,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${app.jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
+
+    @Value("${google.client.id}")
+    private String googleClientId;
 
     @Override
     public TokenResponse login(LoginRequest request, HttpServletRequest httpRequest) {
@@ -78,6 +83,74 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .user(userInfo)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public TokenResponse loginWithGoogle(GoogleLoginRequest request, HttpServletRequest httpRequest) {
+
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+
+        try {
+            GoogleIdToken idToken = verifier.verify(request.idToken());
+
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+
+                String email = payload.getEmail();
+                String googleSubjectId = payload.getSubject();
+                boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
+
+                if (!emailVerified) {
+                    throw new RuntimeException("Email Google này chưa được xác thực.");
+                }
+
+                User user = userRepository.findByUsername(email)
+                        .orElseThrow(() -> new NotFoundException("Tài khoản chưa được đăng ký trên hệ thống. Vui lòng liên hệ Ban quản lý."));
+
+                if (!user.getIsActive()) {
+                    throw new RuntimeException("Tài khoản của bạn đã bị khóa.");
+                }
+
+                // Check Google ID Match
+                if (user.getGoogleId() == null) {
+                    user.setGoogleId(googleSubjectId);
+                    userRepository.save(user);
+                } else if (!user.getGoogleId().equals(googleSubjectId)) {
+                    throw new RuntimeException("Tài khoản này đã được liên kết với một hồ sơ Google khác.");
+                }
+
+                // Logic tạo Token và cấp phiên giống y hệt hàm login() bình thường
+                String jwtToken = jwtService.generateAccessToken(user);
+                String refreshToken = jwtService.generateRefreshToken(user);
+
+                String deviceType = getDeviceType(httpRequest);
+
+                // Thu hồi token cũ của thiết bị hiện tại & Lưu token mới (đã băm) vào DB
+                revokeTokensByDeviceType(user, deviceType);
+                saveUserToken(user, refreshToken, deviceType);
+
+                TokenResponse.UserInfo userInfo = TokenResponse.UserInfo.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .role(user.getRole().getRoleName())
+                        .build();
+
+                return TokenResponse.builder()
+                        .accessToken(jwtToken)
+                        .refreshToken(refreshToken)
+                        .user(userInfo)
+                        .build();
+
+            } else {
+                throw new IllegalArgumentException("Google ID Token không hợp lệ hoặc đã hết hạn.");
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Xác thực Google thất bại: " + e.getMessage());
+        }
     }
 
     @Override
