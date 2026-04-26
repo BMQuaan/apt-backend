@@ -15,7 +15,8 @@ import com.ptithcm.apt.dto.request.UpdateRentInvoiceStatusRequest;
 import com.ptithcm.apt.dto.response.AdminRentInvoiceDetailResponse;
 import com.ptithcm.apt.dto.response.AdminRentInvoiceListResponse;
 import com.ptithcm.apt.dto.response.RentInvoiceResponse;
-import com.ptithcm.apt.dto.response.UpdateRentInvoiceStatusReponse;
+import com.ptithcm.apt.dto.response.UpdateRentInvoiceStatusResponse;
+import com.ptithcm.apt.dto.response.UserRentInvoiceListResponse;
 import com.ptithcm.apt.entity.RentInvoice;
 import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
@@ -26,6 +27,7 @@ import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mappers.RentInvoiceMapper;
 import com.ptithcm.apt.repository.RentInvoiceRepository;
 import com.ptithcm.apt.repository.ResidentApartmentRepository;
+import com.ptithcm.apt.repository.ResidentRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.RentInvoiceSpecifications;
 import com.ptithcm.apt.service.RentInvoiceService;
@@ -40,6 +42,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         private final ResidentApartmentRepository residentApartmentRepository;
         private final RentInvoiceMapper rentInvoiceMapper;
         private final UserRepository userRepository;
+        private final ResidentRepository residentRepository;
 
         @Override
         @Transactional
@@ -100,35 +103,75 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         }
 
         @Override
-        public UpdateRentInvoiceStatusReponse updateRentInvoiceStatus(Long id, UpdateRentInvoiceStatusRequest req) {
-    RentInvoice rentInvoice = rentInvoiceRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Rent invoice not found"));
+        public UpdateRentInvoiceStatusResponse updateRentInvoiceStatus(Long id, UpdateRentInvoiceStatusRequest req) {
+                RentInvoice rentInvoice = rentInvoiceRepository.findById(id)
+                                .orElseThrow(() -> new NotFoundException("Rent invoice not found"));
 
-    RentStatus currentStatus = rentInvoice.getStatus();
-    RentStatus newStatus = req.status();
+                RentStatus currentStatus = rentInvoice.getStatus();
+                RentStatus newStatus = req.status();
 
-    if (newStatus != RentStatus.PAID) {
-        throw new RuntimeException("API only supports updating status to PAID");
-    }
+                if (newStatus != RentStatus.PAID) {
+                        throw new RuntimeException("API only supports updating status to PAID");
+                }
 
-    if (currentStatus == RentStatus.PAID) {
-        throw new RuntimeException("Invoice is already PAID");
-    }
+                if (currentStatus == RentStatus.PAID) {
+                        throw new RuntimeException("Invoice is already PAID");
+                }
 
-    if (currentStatus != RentStatus.UNPAID && currentStatus != RentStatus.LATE) {
-        throw new RuntimeException("Cannot pay invoice with current status: " + currentStatus);
-    }
+                if (currentStatus != RentStatus.UNPAID && currentStatus != RentStatus.LATE) {
+                        throw new RuntimeException("Cannot pay invoice with current status: " + currentStatus);
+                }
 
-    rentInvoice.setStatus(RentStatus.PAID);
-    rentInvoice.setPaidAt(LocalDateTime.now());
+                rentInvoice.setStatus(RentStatus.PAID);
+                rentInvoice.setPaidAt(LocalDateTime.now());
 
-    String username = SecurityUtils.getCurrentUsername();
-    User currentUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("Authenticated user " + username + " not found"));
+                String username = SecurityUtils.getCurrentUsername();
+                User currentUser = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Authenticated user " + username + " not found"));
 
-    rentInvoice.setConfirmedBy(currentUser);
+                rentInvoice.setConfirmedBy(currentUser);
 
-    rentInvoiceRepository.save(rentInvoice);
-    return rentInvoiceMapper.toUpdateBillStatusResponse(rentInvoice);
-}
+                rentInvoiceRepository.save(rentInvoice);
+                return rentInvoiceMapper.toUpdateBillStatusResponse(rentInvoice);
+        }
+
+        @Override
+        public Page<UserRentInvoiceListResponse> getMyRentInvoices(Integer month, Integer year, Long apartmentId,
+                        RentStatus status, Pageable pageable) {
+                String userName = SecurityUtils.getCurrentUsername();
+                User currentUser = userRepository.findByUsername(userName)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+                Long currentUserId = currentUser.getId();
+
+                // Lấy resident của user hiện tại để xác định viewerRole
+                Resident currentResident = residentRepository.findByUser_Id(currentUserId)
+                                .orElseThrow(() -> new RuntimeException("Resident not found"));
+
+                Page<RentInvoice> rentInvoices = rentInvoiceRepository.findMyRentInvoices(
+                                currentUserId, apartmentId, month, year, status, pageable);
+
+                return rentInvoices.map(ri -> {
+                        boolean isTenant = currentResident.getId().equals(ri.getTenant().getId());
+                        String viewerRole = isTenant ? "TENANT" : "OWNER";
+
+                        String tenantName = null;
+                        if (!isTenant && ri.getTenant().getId() != null) {
+                                tenantName = residentRepository.findById(ri.getTenant().getId())
+                                                .map(Resident::getFullName)
+                                                .orElse(null);
+                        }
+                        return UserRentInvoiceListResponse.builder()
+                                        .id(ri.getId())
+                                        .apartmentName(ri.getApartment().getRoomNumber())
+                                        .billingMonth(ri.getBillingMonth())
+                                        .billingYear(ri.getBillingYear())
+                                        .rentAmount(ri.getRentAmount())
+                                        .status(ri.getStatus())
+                                        .dueDate(ri.getDueDate())
+                                        .viewerRole(viewerRole)
+                                        .tenantName(tenantName)
+                                        .build();
+                });
+        }
 }

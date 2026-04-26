@@ -22,7 +22,7 @@ import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
 import com.ptithcm.apt.dto.response.RentInvoiceResponse;
 import com.ptithcm.apt.dto.response.AdminBillDetailResponse;
 import com.ptithcm.apt.dto.response.AdminBillListResponse;
-import com.ptithcm.apt.dto.response.UserBillDetailReponse;
+import com.ptithcm.apt.dto.response.UserBillDetailResponse;
 import com.ptithcm.apt.dto.response.UserBillListResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Apartment;
@@ -205,12 +205,8 @@ public class BillServiceImpl implements BillService {
                 BillStatus currentStatus = bill.getStatus();
                 BillStatus newStatus = req.status();
 
-                if (newStatus == BillStatus.LATE) {
-                        throw new RuntimeException("Cannot manually change status to LATE");
-                }
-
                 if (newStatus != BillStatus.PAID) {
-                        throw new RuntimeException("API only supports updating status to PAID");
+                        throw new RuntimeException("Only PAID status transition is supported");
                 }
 
                 if (currentStatus == BillStatus.PAID) {
@@ -255,7 +251,7 @@ public class BillServiceImpl implements BillService {
         }
 
         @Override
-        public UserBillDetailReponse getMyBillDetailById(Long id) {
+        public UserBillDetailResponse getMyBillDetailById(Long id) {
                 String userName = SecurityUtils.getCurrentUsername();
                 User currentUser = userRepository.findByUsername(userName)
                                 .orElseThrow(() -> new RuntimeException("User not found"));

@@ -9,7 +9,7 @@ import com.ptithcm.apt.dto.response.BillSummaryResponse;
 import com.ptithcm.apt.dto.response.BillResponse;
 import com.ptithcm.apt.dto.response.AdminBillDetailResponse;
 import com.ptithcm.apt.dto.response.AdminBillListResponse;
-import com.ptithcm.apt.dto.response.UserBillDetailReponse;
+import com.ptithcm.apt.dto.response.UserBillDetailResponse;
 import com.ptithcm.apt.dto.response.UserBillListResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
@@ -28,6 +28,6 @@ public interface BillService {
         public Page<UserBillListResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
                         Pageable pageable);
 
-        public UserBillDetailReponse getMyBillDetailById(Long id);
+        public UserBillDetailResponse getMyBillDetailById(Long id);
 
 }

@@ -19,7 +19,7 @@ public record AdminRentInvoiceDetailResponse(
                 int billingMonth,
                 int billingYear,
                 BigDecimal rentAmount,
-                String tentnantName,
+                String tenantName,
                 String ownerName,
                 RentStatus status,
                 String createdBy,

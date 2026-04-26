@@ -10,7 +10,7 @@ import lombok.Builder;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record UpdateBillStatusResponse(
+public record UserBillDetailResponse(
         Long id,
         Long apartment,
         String apartmentName,
@@ -22,9 +22,8 @@ public record UpdateBillStatusResponse(
         BigDecimal sanitationFee,
         BigDecimal totalAmount,
         BillStatus status,
-        LocalDateTime paidAt,
-        String createdBy,
-        String confirmedBy,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        String confirmBy,
+        LocalDateTime paidAt) {
 
 }

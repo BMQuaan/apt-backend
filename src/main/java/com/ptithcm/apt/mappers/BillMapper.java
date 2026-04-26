@@ -6,7 +6,7 @@ import org.mapstruct.Mapping;
 import com.ptithcm.apt.dto.response.BillResponse;
 import com.ptithcm.apt.dto.response.AdminBillDetailResponse;
 import com.ptithcm.apt.dto.response.AdminBillListResponse;
-import com.ptithcm.apt.dto.response.UserBillDetailReponse;
+import com.ptithcm.apt.dto.response.UserBillDetailResponse;
 import com.ptithcm.apt.dto.response.UserBillListResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Bill;
@@ -33,7 +33,7 @@ public interface BillMapper {
     @Mapping(source = "apartment.id", target = "apartment")
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")
     @Mapping(source = "confirmedBy.username", target = "confirmBy")
-    UserBillDetailReponse toGetMyBillDetailByIdResponse(Bill bill);
+    UserBillDetailResponse toGetMyBillDetailByIdResponse(Bill bill);
 
     @Mapping(source = "apartment.id", target = "apartmentId")
     @Mapping(source = "apartment.roomNumber", target = "apartmentName")
