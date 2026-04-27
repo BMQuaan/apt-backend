@@ -1,4 +1,4 @@
-package com.ptithcm.apt.dto;
+package com.ptithcm.apt.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

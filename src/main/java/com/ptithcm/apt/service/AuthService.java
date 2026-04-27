@@ -1,6 +1,6 @@
 package com.ptithcm.apt.service;
 
-import com.ptithcm.apt.dto.GoogleLoginRequest;
+import com.ptithcm.apt.dto.request.GoogleLoginRequest;
 import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.TokenResponse;
 import jakarta.servlet.http.HttpServletRequest;

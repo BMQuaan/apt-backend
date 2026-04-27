@@ -4,7 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.ptithcm.apt.dto.GoogleLoginRequest;
+import com.ptithcm.apt.dto.request.GoogleLoginRequest;
 import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.TokenResponse;
 import com.ptithcm.apt.entity.Otp;
@@ -27,7 +27,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

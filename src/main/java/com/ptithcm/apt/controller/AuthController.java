@@ -1,6 +1,6 @@
 package com.ptithcm.apt.controller;
 
-import com.ptithcm.apt.dto.GoogleLoginRequest;
+import com.ptithcm.apt.dto.request.GoogleLoginRequest;
 import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.ApiResponse;
 import com.ptithcm.apt.dto.response.TokenResponse;
@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
