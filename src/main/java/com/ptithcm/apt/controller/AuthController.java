@@ -1,5 +1,6 @@
 package com.ptithcm.apt.controller;
 
+import com.ptithcm.apt.dto.GoogleLoginRequest;
 import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.ApiResponse;
 import com.ptithcm.apt.dto.response.TokenResponse;
@@ -23,6 +24,15 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         TokenResponse response = authService.login(request, httpRequest);
         return ResponseEntity.ok(ApiResponse.success(response, "Đăng nhập thành công"));
+    }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<ApiResponse<TokenResponse>> loginWithGoogle(
+            @Valid @RequestBody GoogleLoginRequest request, 
+            HttpServletRequest httpRequest) {
+        
+        TokenResponse response = authService.loginWithGoogle(request, httpRequest);
+        return ResponseEntity.ok(ApiResponse.success(response, "Đăng nhập Google thành công."));
     }
 
     @PostMapping("/refresh-token")
