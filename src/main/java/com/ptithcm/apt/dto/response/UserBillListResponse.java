@@ -10,15 +10,17 @@ import lombok.Builder;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record UserBillListResponse(
-        Long id,
-        String apartmentName,
-        Integer billingMonth,
-        Integer billingYear,
-        BigDecimal electricityFee,
-        BigDecimal waterFee,
-        BigDecimal managementFee,
-        BigDecimal sanitationFee,
-        BigDecimal totalAmount,
-        BillStatus status) {
+                Long id,
+                String apartmentName,
+                Integer billingMonth,
+                Integer billingYear,
+                BigDecimal electricityFee,
+                BigDecimal waterFee,
+                BigDecimal managementFee,
+                BigDecimal sanitationFee,
+                BigDecimal totalAmount,
+                BillStatus status,
+                String viewerRole, // "HEAD" hoặc "OWNER"
+                String tenantName) {
 
 }

@@ -15,7 +15,7 @@ import com.ptithcm.apt.service.MonthlyMetricService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/public/v1")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class MonthlyMetricController {
     private final MonthlyMetricService monthlyMetricService;

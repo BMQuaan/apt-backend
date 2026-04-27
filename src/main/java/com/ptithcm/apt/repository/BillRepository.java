@@ -23,12 +23,12 @@ public interface BillRepository extends JpaRepository<Bill, Long>, JpaSpecificat
                         "JOIN ResidentApartment ra ON ra.apartment.id = a.id " +
                         "JOIN Resident r ON r.id = ra.resident.id " +
                         "WHERE r.user.id = :userId " +
-                        // Ép kiểu cho các tham số kiểm tra NULL
+                        "AND ra.isActive = true " +
+                        "AND (ra.isHead = true OR ra.role = 'OWNER') " +
                         "AND (cast(:apartmentId as text) IS NULL OR a.id = :apartmentId) " +
                         "AND (cast(:month as integer) IS NULL OR b.billingMonth = :month) " +
                         "AND (cast(:year as integer) IS NULL OR b.billingYear = :year) " +
-                        "AND (cast(:status as text) IS NULL OR b.status = :status) " +
-                        "AND ra.isActive = true")
+                        "AND (cast(:status as text) IS NULL OR b.status = :status)")
         Page<Bill> findMyBills(@Param("userId") Long userId,
                         @Param("apartmentId") Long apartmentId,
                         @Param("month") Integer month,
