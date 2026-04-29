@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "rent_invoices", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"apartment_id", "billing_month", "billing_year"})
+        @UniqueConstraint(columnNames = { "apartment_id", "billing_month", "billing_year" })
 })
 @Getter
 @Setter

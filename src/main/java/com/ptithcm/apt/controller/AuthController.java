@@ -1,5 +1,6 @@
 package com.ptithcm.apt.controller;
 
+import com.ptithcm.apt.dto.request.GoogleLoginRequest;
 import com.ptithcm.apt.dto.request.*;
 import com.ptithcm.apt.dto.response.ApiResponse;
 import com.ptithcm.apt.dto.response.TokenResponse;
@@ -8,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +23,15 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         TokenResponse response = authService.login(request, httpRequest);
         return ResponseEntity.ok(ApiResponse.success(response, "Đăng nhập thành công"));
+    }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<ApiResponse<TokenResponse>> loginWithGoogle(
+            @Valid @RequestBody GoogleLoginRequest request, 
+            HttpServletRequest httpRequest) {
+        
+        TokenResponse response = authService.loginWithGoogle(request, httpRequest);
+        return ResponseEntity.ok(ApiResponse.success(response, "Đăng nhập Google thành công."));
     }
 
     @PostMapping("/refresh-token")
