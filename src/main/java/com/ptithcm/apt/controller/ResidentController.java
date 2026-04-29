@@ -65,7 +65,7 @@ public class ResidentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/apartment/{apartmentId}")
+    @GetMapping("/apartments/{apartmentId}")
     public ResponseEntity<List<ResidentListResponse>> getResidentsInApartment(@PathVariable Long apartmentId) {
         List<ResidentListResponse> responses = residentService.getResidentsByApartment(apartmentId);
         return ResponseEntity.ok(responses);
