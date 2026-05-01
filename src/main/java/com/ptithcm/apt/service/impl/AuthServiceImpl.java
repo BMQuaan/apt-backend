@@ -12,6 +12,7 @@ import com.ptithcm.apt.entity.Token;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.repository.OtpRepository;
+import com.ptithcm.apt.repository.ResidentRepository;
 import com.ptithcm.apt.repository.TokenRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.service.AuthService;
@@ -42,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final ResidentRepository residentRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
@@ -71,16 +73,10 @@ public class AuthServiceImpl implements AuthService {
 
         saveUserToken(user, refreshToken, deviceType);
 
-        TokenResponse.UserInfo userInfo = TokenResponse.UserInfo.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole().getRoleName())
-                .build();
-
         return TokenResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
-                .user(userInfo)
+                .user(buildUserInfo(user))
                 .build();
     }
 
@@ -129,16 +125,10 @@ public class AuthServiceImpl implements AuthService {
                 revokeTokensByDeviceType(user, deviceType);
                 saveUserToken(user, refreshToken, deviceType);
 
-                TokenResponse.UserInfo userInfo = TokenResponse.UserInfo.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .role(user.getRole().getRoleName())
-                        .build();
-
                 return TokenResponse.builder()
                         .accessToken(jwtToken)
                         .refreshToken(refreshToken)
-                        .user(userInfo)
+                        .user(buildUserInfo(user))
                         .build();
 
             } else {
@@ -181,6 +171,7 @@ public class AuthServiceImpl implements AuthService {
                 return TokenResponse.builder()
                         .accessToken(accessToken)
                         .refreshToken(rawRefreshToken)
+                        .user(buildUserInfo(user))
                         .build();
             }
         }
@@ -364,6 +355,19 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         // revokeAllUserTokens(user);
+    }
+
+    private TokenResponse.UserInfo buildUserInfo(User user) {
+        String residentName = residentRepository.findByUser_Id(user.getId())
+                .map(r -> r.getFullName())
+                .orElse(null);
+
+        return TokenResponse.UserInfo.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .role(user.getRole().getRoleName())
+                .residentName(residentName)
+                .build();
     }
 
     private String generateSecureOtp() {

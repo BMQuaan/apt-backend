@@ -14,6 +14,7 @@ public record TokenResponse(
     public record UserInfo(
             Long id,
             String username,
-            String role
+            String role,
+            String residentName
     ) {}
 }
