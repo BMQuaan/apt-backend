@@ -56,8 +56,10 @@ public class ContractRequest {
 
     @NotNull(message = "Ngày bắt đầu hợp đồng không được để trống")
     @FutureOrPresent(message = "Ngày bắt đầu hợp đồng không được nằm trong quá khứ")
+    @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate contractStart;
 
     @FutureOrPresent(message = "Ngày kết thúc hợp đồng không được nằm trong quá khứ")
+    @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate contractEnd;
 }

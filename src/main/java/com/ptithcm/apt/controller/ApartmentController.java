@@ -23,7 +23,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/admin/apartments")
+@RequestMapping("/api/v1/apartments")
 @CrossOrigin(originPatterns = "*")
 @RequiredArgsConstructor
 public class ApartmentController {
@@ -50,8 +50,6 @@ public class ApartmentController {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
 
-    // Chi tiết admin
-    // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<List<ApartmentResponse>> searchApartmentsByRoomNumber(@RequestParam String keyword) {
@@ -63,7 +61,6 @@ public class ApartmentController {
         return ResponseEntity.ok(apartmentService.getApartmentsByStatus(status));
     }
 
-    // Chỉ có admin, chủ nhà, người đang thuê mới xem chi tiết 1 phòng
     @GetMapping("/{id}")
     public ResponseEntity<ApartmentResponse> getApartmentById(@PathVariable Long id) {
         return ResponseEntity.ok(apartmentService.getApartmentById(id));

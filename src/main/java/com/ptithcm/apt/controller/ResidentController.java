@@ -3,6 +3,7 @@ package com.ptithcm.apt.controller;
 import com.ptithcm.apt.dto.request.MemberRequest;
 import com.ptithcm.apt.dto.request.ResidentRequest;
 import com.ptithcm.apt.dto.request.UpdateResidentRequest;
+import com.ptithcm.apt.dto.response.MyApartmentResponse;
 import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/admin/residents")
+@RequestMapping("/api/v1/residents")
 @RequiredArgsConstructor
 public class ResidentController {
 
@@ -65,6 +66,7 @@ public class ResidentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/apartments/{apartmentId}")
     public ResponseEntity<List<ResidentListResponse>> getResidentsInApartment(@PathVariable Long apartmentId) {
         List<ResidentListResponse> responses = residentService.getResidentsByApartment(apartmentId);
@@ -75,5 +77,12 @@ public class ResidentController {
     @GetMapping("/{id}")
     public ResponseEntity<ResidentDetailResponse> getResidentDetail(@PathVariable Long id) {
         return ResponseEntity.ok(residentService.getResidentDetailById(id));
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/me")
+    public ResponseEntity<List<MyApartmentResponse>> getMyApartments() {
+        List<MyApartmentResponse> myRooms = residentService.getMyApartments();
+        return ResponseEntity.ok(myRooms);
     }
 }

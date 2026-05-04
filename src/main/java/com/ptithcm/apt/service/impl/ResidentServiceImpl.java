@@ -4,6 +4,7 @@ import com.ptithcm.apt.dto.request.ContractRequest;
 import com.ptithcm.apt.dto.request.MemberRequest;
 import com.ptithcm.apt.dto.request.ResidentRequest;
 import com.ptithcm.apt.dto.request.UpdateResidentRequest;
+import com.ptithcm.apt.dto.response.MyApartmentResponse;
 import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -41,13 +43,6 @@ public class ResidentServiceImpl implements ResidentService {
         @Override
         @Transactional
         public ResidentResponse addMemberToApartment(String roomNumber, MemberRequest request) {
-
-                if (residentRepository.existsByEmail(request.getEmail())) {
-                        throw new RuntimeException("Email này đã tồn tại trong hệ thống!");
-                }
-                if (residentRepository.existsByCitizenIdentity(request.getCitizenIdentity())) {
-                        throw new RuntimeException("Căn cước công dân này đã tồn tại trong hệ thống!");
-                }
                 Apartment apartment = apartmentRepository.findByRoomNumber(roomNumber)
                                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với ID: " + roomNumber));
 
@@ -56,17 +51,31 @@ public class ResidentServiceImpl implements ResidentService {
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Phòng này chưa có người thuê/chủ hộ, không thể thêm thành viên ở ghép!"));
 
-                Resident resident = Resident.builder()
-                                .fullName(request.getFullName())
-                                .dob(request.getDob())
-                                .phone(request.getPhone())
-                                .citizenIdentity(request.getCitizenIdentity())
-                                .email(request.getEmail())
-                                .build();
-                Resident savedResident = residentRepository.save(resident);
+                Resident resident;
+                var existingResidentByEmail = residentRepository.findByEmail(request.getEmail());
+                var existingResidentByCccd = residentRepository.findByCitizenIdentity(request.getCitizenIdentity());
+
+                if (existingResidentByEmail.isPresent()) {
+                        resident = existingResidentByEmail.get();
+                        if (!resident.getCitizenIdentity().equals(request.getCitizenIdentity())) {
+                                throw new RuntimeException("Email này đã được đăng ký cho một CCCD khác!");
+                        }
+                } else if (existingResidentByCccd.isPresent()) {
+                        throw new RuntimeException("Căn cước công dân này đã tồn tại với Email khác!");
+                } else {
+                        // Nếu là người mới hoàn toàn
+                        Resident newResident = Resident.builder()
+                                        .fullName(request.getFullName())
+                                        .dob(request.getDob())
+                                        .phone(request.getPhone())
+                                        .citizenIdentity(request.getCitizenIdentity())
+                                        .email(request.getEmail())
+                                        .build();
+                        resident = residentRepository.save(newResident);
+                }
 
                 ResidentApartment memberRecord = ResidentApartment.builder()
-                                .resident(savedResident)
+                                .resident(resident)
                                 .apartment(apartment)
                                 .role("MEMBER")
                                 .isHead(false)
@@ -79,12 +88,12 @@ public class ResidentServiceImpl implements ResidentService {
                 residentApartmentRepository.save(memberRecord);
 
                 return ResidentResponse.builder()
-                                .id(savedResident.getId())
-                                .fullName(savedResident.getFullName())
-                                .citizenIdentity(savedResident.getCitizenIdentity())
-                                .dob(savedResident.getDob())
-                                .phone(savedResident.getPhone())
-                                .email(savedResident.getEmail())
+                                .id(resident.getId())
+                                .fullName(resident.getFullName())
+                                .citizenIdentity(resident.getCitizenIdentity())
+                                .dob(resident.getDob())
+                                .phone(resident.getPhone())
+                                .email(resident.getEmail())
                                 .build();
         }
 
@@ -94,22 +103,25 @@ public class ResidentServiceImpl implements ResidentService {
                 Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân!"));
 
-                ResidentApartment activeRa = residentApartmentRepository
-                                .findByResidentIdAndIsActiveTrue(residentId)
-                                .stream().findFirst().orElse(null);
+                List<ResidentApartment> activeRas = residentApartmentRepository
+                                .findAllByResidentIdAndIsActiveTrue(residentId);
 
+                List<ResidentDetailResponse.ResidencyInfo> residencies = activeRas.stream()
+                                .map(ra -> ResidentDetailResponse.ResidencyInfo.builder()
+                                                .apartmentId(ra.getApartment().getId())
+                                                .roomNumber(ra.getApartment().getRoomNumber())
+                                                .role(ra.getRole())
+                                                .isHead(ra.getIsHead())
+                                                .build())
+                                .collect(Collectors.toList());
                 return ResidentDetailResponse.builder()
                                 .id(resident.getId())
                                 .fullName(resident.getFullName())
                                 .citizenIdentity(resident.getCitizenIdentity())
-                                .dob(resident.getDob())
+                                .dob(resident.getDob() != null ? resident.getDob().toString() : null)
                                 .phone(resident.getPhone())
                                 .email(resident.getEmail())
-                                // Dữ liệu phòng (nếu họ đang ở)
-                                .apartmentId(activeRa != null ? activeRa.getApartment().getId() : null)
-                                .roomNumber(activeRa != null ? activeRa.getApartment().getRoomNumber() : null)
-                                .role(activeRa != null ? activeRa.getRole() : null)
-                                .isHead(activeRa != null ? activeRa.getIsHead() : null)
+                                .residencies(residencies) // Trả về toàn bộ danh sách
                                 .build();
         }
 
@@ -280,5 +292,32 @@ public class ResidentServiceImpl implements ResidentService {
                                 .contractStart(ra.getContractStart())
                                 .build())
                                 .collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<MyApartmentResponse> getMyApartments() {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication == null || !authentication.isAuthenticated()) {
+                        throw new RuntimeException("Chưa đăng nhập!");
+                }
+                String currentEmail = authentication.getName();
+
+                Resident currentResident = residentRepository.findByEmail(currentEmail)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Tài khoản của bạn chưa được liên kết với hồ sơ cư dân nào!"));
+
+                List<ResidentApartment> activeRooms = residentApartmentRepository
+                                .findAllByResidentIdAndIsActiveTrue(currentResident.getId());
+
+                return activeRooms.stream().map(ra -> MyApartmentResponse.builder()
+                                .apartmentId(ra.getApartment().getId())
+                                .roomNumber(ra.getApartment().getRoomNumber())
+                                .role(ra.getRole())
+                                .isHead(ra.getIsHead())
+                                .rentalPrice(ra.getRentalPrice())
+                                .contractStart(ra.getContractStart())
+                                .contractEnd(ra.getContractEnd())
+                                .build()).collect(Collectors.toList());
         }
 }

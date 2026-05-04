@@ -73,7 +73,7 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
                         "    OR LOWER(ra.resident.citizenIdentity) LIKE LOWER(CONCAT('%', :keyword, '%')))")
         Page<ResidentApartment> searchAllActiveResidents(@Param("keyword") String keyword, Pageable pageable);
 
-        Optional<ResidentApartment> findByResidentIdAndIsActiveTrue(Long residentId);
+        List<ResidentApartment> findAllByResidentIdAndIsActiveTrue(Long residentId);
 
         boolean existsByApartmentIdAndResidentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId, Long residentId);
 }
