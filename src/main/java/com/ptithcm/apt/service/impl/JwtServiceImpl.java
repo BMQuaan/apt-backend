@@ -55,7 +55,13 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(Map.of(), userDetails, refreshTokenExpiration);
+        Map<String, Object> extraClaims = new HashMap<>();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+        extraClaims.put("roles", roles);
+        
+        return buildToken(extraClaims, userDetails, refreshTokenExpiration);
     }
 
     @Override
