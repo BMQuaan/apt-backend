@@ -9,7 +9,7 @@ import com.ptithcm.apt.dto.response.PreviousMonthlyMetricResponse;
 import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
 import com.ptithcm.apt.entity.MonthlyMetric;
 import com.ptithcm.apt.exception.NotFoundException;
-import com.ptithcm.apt.mappers.MonthlyMetricMapper;
+import com.ptithcm.apt.mapper.MonthlyMetricMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.MonthlyMetricRepository;
 import com.ptithcm.apt.service.MonthlyMetricService;

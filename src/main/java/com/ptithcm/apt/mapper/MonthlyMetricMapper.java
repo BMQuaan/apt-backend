@@ -1,4 +1,4 @@
-package com.ptithcm.apt.mappers;
+package com.ptithcm.apt.mapper;
 
 import java.math.BigDecimal;
 

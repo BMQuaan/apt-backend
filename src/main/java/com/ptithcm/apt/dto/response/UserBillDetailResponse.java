@@ -11,19 +11,19 @@ import lombok.Builder;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record UserBillDetailResponse(
-        Long id,
-        Long apartment,
-        String apartmentName,
-        Integer billingMonth,
-        Integer billingYear,
-        BigDecimal electricityFee,
-        BigDecimal waterFee,
-        BigDecimal managementFee,
-        BigDecimal sanitationFee,
-        BigDecimal totalAmount,
-        BillStatus status,
-        LocalDateTime createdAt,
-        String confirmBy,
-        LocalDateTime paidAt) {
+                Long id,
+                Long apartment,
+                String apartmentName,
+                Integer billingMonth,
+                Integer billingYear,
+                BigDecimal electricityFee,
+                BigDecimal waterFee,
+                BigDecimal managementFee,
+                BigDecimal sanitationFee,
+                BigDecimal totalAmount,
+                BillStatus status,
+                LocalDateTime createdAt,
+                LocalDateTime paidAt,
+                LocalDateTime dueDate) {
 
 }

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,8 +35,7 @@ import com.ptithcm.apt.entity.ServiceConfig;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.exception.NotFoundException;
-import com.ptithcm.apt.mappers.BillMapper;
-import com.ptithcm.apt.mappers.MonthlyMetricMapper;
+import com.ptithcm.apt.mapper.BillMapper;
 import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
 import com.ptithcm.apt.repository.MonthlyMetricRepository;
@@ -294,6 +292,7 @@ public class BillServiceImpl implements BillService {
                                         .tenantName(!isHead && tenant != null
                                                         ? tenant.getFullName()
                                                         : null)
+                                        .dueDate(b.getDueDate())
                                         .build();
                 });
         }

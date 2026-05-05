@@ -16,15 +16,15 @@ import com.ptithcm.apt.dto.response.AdminRentInvoiceDetailResponse;
 import com.ptithcm.apt.dto.response.AdminRentInvoiceListResponse;
 import com.ptithcm.apt.dto.response.RentInvoiceResponse;
 import com.ptithcm.apt.dto.response.UpdateRentInvoiceStatusResponse;
+import com.ptithcm.apt.dto.response.UserRentInvoiceDetailResponse;
 import com.ptithcm.apt.dto.response.UserRentInvoiceListResponse;
 import com.ptithcm.apt.entity.RentInvoice;
 import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
 import com.ptithcm.apt.entity.User;
-import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.enums.RentStatus;
 import com.ptithcm.apt.exception.NotFoundException;
-import com.ptithcm.apt.mappers.RentInvoiceMapper;
+import com.ptithcm.apt.mapper.RentInvoiceMapper;
 import com.ptithcm.apt.repository.RentInvoiceRepository;
 import com.ptithcm.apt.repository.ResidentApartmentRepository;
 import com.ptithcm.apt.repository.ResidentRepository;
@@ -173,5 +173,17 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                                         .tenantName(tenantName)
                                         .build();
                 });
+        }
+
+        @Override
+        public UserRentInvoiceDetailResponse getMyRentInvoiceDetailById(Long id) {
+                String userName = SecurityUtils.getCurrentUsername();
+                User currentUser = userRepository.findByUsername(userName)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+                Long currentUserId = currentUser.getId();
+                RentInvoice rentInvoice = rentInvoiceRepository.findByIdAndUserId(id, currentUserId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Rent invoice not found or you don't have permission to view it"));
+                return rentInvoiceMapper.toMyRentInvoiceDetailResponse(rentInvoice);
         }
 }

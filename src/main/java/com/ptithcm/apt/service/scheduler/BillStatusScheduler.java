@@ -5,6 +5,9 @@ import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.repository.BillRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,13 @@ import java.util.List;
 public class BillStatusScheduler {
 
     private final BillRepository billRepository;
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void onApplicationStart() {
+        log.info(">>> System started. Executing initial overdue bills check...");
+        autoUpdateLateStatus();
+    }
 
     /**
      * Chạy mỗi ngày vào lúc 00:00:00

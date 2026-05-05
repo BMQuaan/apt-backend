@@ -1,6 +1,7 @@
 package com.ptithcm.apt.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ptithcm.apt.enums.BillStatus;
@@ -20,7 +21,8 @@ public record UserBillListResponse(
                 BigDecimal sanitationFee,
                 BigDecimal totalAmount,
                 BillStatus status,
-                String viewerRole, // "HEAD" hoặc "OWNER"
-                String tenantName) {
+                String viewerRole,
+                String tenantName,
+                LocalDateTime dueDate) {
 
 }

@@ -20,6 +20,7 @@ import com.ptithcm.apt.dto.response.AdminRentInvoiceDetailResponse;
 import com.ptithcm.apt.dto.response.AdminRentInvoiceListResponse;
 import com.ptithcm.apt.dto.response.PageResponse;
 import com.ptithcm.apt.dto.response.UpdateRentInvoiceStatusResponse;
+import com.ptithcm.apt.dto.response.UserRentInvoiceDetailResponse;
 import com.ptithcm.apt.dto.response.UserRentInvoiceListResponse;
 import com.ptithcm.apt.enums.RentStatus;
 import com.ptithcm.apt.service.RentInvoiceService;
@@ -75,6 +76,13 @@ public class RentInvoiceController {
         Page<UserRentInvoiceListResponse> res = rentInvoiceService.getMyRentInvoices(month, year, apartmentId, status,
                 pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(res), "Successfully fetched my rent invoices"));
+    }
+
+    @GetMapping("/me/rent-invoices/{id}")
+    public ResponseEntity<ApiResponse<UserRentInvoiceDetailResponse>> getMyRentInvoiceDetailById(
+            @PathVariable Long id) {
+        UserRentInvoiceDetailResponse res = rentInvoiceService.getMyRentInvoiceDetailById(id);
+        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched rent invoice"));
     }
 
 }
