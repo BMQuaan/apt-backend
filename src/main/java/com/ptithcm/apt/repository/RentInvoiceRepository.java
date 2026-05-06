@@ -1,5 +1,7 @@
 package com.ptithcm.apt.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -43,4 +45,6 @@ public interface RentInvoiceRepository extends JpaRepository<RentInvoice, Long>,
                         "AND ra.isActive = true " +
                         "AND (ra.role = 'TENANT' OR ra.role = 'OWNER')")
         Optional<RentInvoice> findByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+        List<RentInvoice> findAllByStatusAndDueDateBefore(RentStatus status, LocalDateTime dateTime);
 }

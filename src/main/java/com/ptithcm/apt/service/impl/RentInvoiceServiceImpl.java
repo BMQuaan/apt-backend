@@ -3,6 +3,8 @@ package com.ptithcm.apt.service.impl;
 import java.security.Security;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ import com.ptithcm.apt.repository.ResidentApartmentRepository;
 import com.ptithcm.apt.repository.ResidentRepository;
 import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.RentInvoiceSpecifications;
+import com.ptithcm.apt.service.EmailService;
 import com.ptithcm.apt.service.RentInvoiceService;
 import com.ptithcm.apt.utils.SecurityUtils;
 
@@ -43,6 +46,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         private final RentInvoiceMapper rentInvoiceMapper;
         private final UserRepository userRepository;
         private final ResidentRepository residentRepository;
+        private final EmailService emailService;
 
         @Override
         @Transactional
@@ -80,6 +84,8 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                                 .build();
 
                 rentInvoiceRepository.save(invoice);
+
+                sendRentInvoiceEmail(invoice, contract);
 
                 return rentInvoiceMapper.toCreateRentInvoiceResponse(invoice);
         }
@@ -185,5 +191,32 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Rent invoice not found or you don't have permission to view it"));
                 return rentInvoiceMapper.toMyRentInvoiceDetailResponse(rentInvoice);
+        }
+
+        private void sendRentInvoiceEmail(RentInvoice invoice, ResidentApartment contract) {
+                Resident tenant = invoice.getTenant();
+                if (tenant != null && tenant.getEmail() != null) {
+
+                        LocalDateTime now = LocalDateTime.now();
+                        LocalDateTime estimatedDueDate = now.plusDays(15);
+
+                        String formattedDueDate = estimatedDueDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+                        Map<String, String> templateModel = Map.of(
+                                        "fullName", tenant.getFullName(),
+                                        "roomNumber", invoice.getApartment().getRoomNumber(),
+                                        "month", String.valueOf(invoice.getBillingMonth()),
+                                        "year", String.valueOf(invoice.getBillingYear()),
+                                        "rentAmount", String.format("%,.0f", invoice.getRentAmount()),
+                                        "dueDate", formattedDueDate);
+
+                        emailService.sendHtmlEmail(
+                                        tenant.getEmail(),
+                                        "[AptApp] Thông báo tiền thuê nhà tháng " + invoice.getBillingMonth() + "/"
+                                                        + invoice.getBillingYear() + " - Phòng "
+                                                        + invoice.getApartment().getRoomNumber(),
+                                        "new_rent_invoice_template_vi.html",
+                                        templateModel);
+                }
         }
 }

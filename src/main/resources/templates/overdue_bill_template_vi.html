@@ -35,9 +35,16 @@
       .content {
         padding: 30px;
       }
-      h3 {
-        color: #1a1a1a; /* text_title */
-        margin-top: 0;
+      .warning-banner {
+        background-color: #fff5f6;
+        border-left: 4px solid #e67182;
+        padding: 15px;
+        margin-bottom: 25px;
+      }
+      .warning-banner p {
+        margin: 0;
+        color: #e67182;
+        font-weight: bold;
       }
       .bill-table {
         width: 100%;
@@ -60,17 +67,10 @@
         background-color: #fffafa;
       }
       .total-row td {
-        color: #e67182; /* primary */
+        color: #e67182;
         font-weight: bold;
         font-size: 18px;
         border-bottom: none;
-      }
-      /* Giao diện hạn thanh toán và hướng dẫn đóng tiền giống mẫu trễ hạn */
-      .due-date-info {
-        color: #d9534f; /* Màu đỏ nhấn mạnh hạn nộp */
-        font-weight: bold;
-        margin-top: 15px;
-        font-size: 13px;
       }
       .payment-instruction {
         background-color: #f8f9fa;
@@ -89,17 +89,11 @@
       .status-note {
         font-size: 0.85em;
         color: #888888;
-        margin-top: 8px;
+        margin-top: 10px;
         display: block;
       }
-      .note {
-        font-size: 0.85em;
-        font-style: italic;
-        color: #999999;
-        margin-top: 20px;
-      }
       .footer {
-        padding: 25px;
+        padding: 20px;
         background-color: #fcfcfc;
         text-align: center;
         font-size: 0.85em;
@@ -111,31 +105,35 @@
   <body>
     <div class="container">
       <div class="header">
-        <h2>Thông Báo Hóa Đơn Mới</h2>
+        <h2>THÔNG BÁO QUÁ HẠN</h2>
       </div>
 
       <div class="content">
+        <div class="warning-banner">
+          <p>⚠️ CẢNH BÁO: Hóa đơn của quý cư dân đã quá hạn thanh toán!</p>
+        </div>
+
         <h3>Kính gửi Ông/Bà {{fullName}},</h3>
         <p>
-          Ban quản lý căn hộ <strong>AptApp</strong> xin thông báo chi tiết phí
-          dịch vụ cho căn hộ <strong>{{roomNumber}}</strong> kỳ
-          <strong>{{month}}/{{year}}</strong>:
+          Ban quản lý <strong>AptApp</strong> trân trọng thông báo hóa đơn dịch
+          vụ căn hộ <strong>{{roomNumber}}</strong> kỳ
+          <strong>{{month}}/{{year}}</strong> hiện đã quá hạn thanh toán.
         </p>
 
         <table class="bill-table">
           <thead>
             <tr>
-              <th>Hạng mục</th>
+              <th>Hạng mục phí</th>
               <th style="text-align: right">Thành tiền</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Tiền điện tiêu thụ</td>
+              <td>Tiền điện</td>
               <td style="text-align: right">{{electricityFee}}đ</td>
             </tr>
             <tr>
-              <td>Tiền nước tiêu thụ</td>
+              <td>Tiền nước</td>
               <td style="text-align: right">{{waterFee}}đ</td>
             </tr>
             <tr>
@@ -147,34 +145,35 @@
               <td style="text-align: right">{{sanitationFee}}đ</td>
             </tr>
             <tr class="total-row">
-              <td>TỔNG CỘNG</td>
+              <td>TỔNG CỘNG CẦN THANH TOÁN</td>
               <td style="text-align: right">{{totalAmount}}đ</td>
             </tr>
           </tbody>
         </table>
 
-        <!-- Hiển thị hạn thanh toán dạng text màu đỏ giống mẫu trễ hạn -->
-        <p class="due-date-info">Hạn thanh toán: {{dueDate}}</p>
+        <p style="color: #d9534f; font-weight: bold; font-size: 13px;">
+          Hạn thanh toán ban đầu: {{dueDate}}
+        </p>
 
-        <!-- Khối hướng dẫn thanh toán giống mẫu trễ hạn -->
+        
         <div class="payment-instruction">
-          <p>Vui lòng đến văn phòng Ban quản lý để thanh toán.</p>
+          <p>
+            Vui lòng đến văn phòng Ban quản lý để thanh toán.
+          </p>
           <span class="status-note">
             * Trạng thái sẽ được cập nhật sau khi quản trị viên duyệt.
           </span>
         </div>
 
-        <p class="note">
-          * Lưu ý: Đây là hóa đơn phí vận hành dịch vụ. Hóa đơn tiền thuê nhà
-          (nếu có) sẽ được gửi trong email riêng.
+        <p style="margin-top: 25px; font-size: 14px;">
+          Để đảm bảo duy trì các dịch vụ tiện ích không bị gián đoạn, quý cư dân vui lòng hoàn tất thủ tục thanh toán trong thời gian sớm nhất.
         </p>
       </div>
 
       <div class="footer">
         <p>
           <strong>Ban Quản Lý AptApp</strong><br />
-          Email: support@aptapp.com | Hotline: 1900 xxxx<br />
-          Cảm ơn quý cư dân đã sử dụng dịch vụ của chúng tôi!
+          Email: support@aptapp.com | Hotline: 1900 xxxx
         </p>
       </div>
     </div>

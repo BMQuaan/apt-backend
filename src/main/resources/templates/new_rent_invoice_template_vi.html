@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        line-height: 1.6;
+        color: #666666;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #eeeeee;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .header {
+        background-color: #e67182;
+        color: #ffffff;
+        padding: 30px 20px;
+        text-align: center;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .content {
+        padding: 30px;
+      }
+      .bill-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+      }
+      .bill-table td {
+        padding: 15px 8px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .total-row {
+        font-weight: bold;
+        color: #e67182;
+        font-size: 18px;
+      }
+      .payment-instruction {
+        background-color: #f8f9fa;
+        border: 1px dashed #e67182;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .footer {
+        padding: 20px;
+        background-color: #fcfcfc;
+        text-align: center;
+        font-size: 0.85em;
+        color: #666666;
+        border-top: 1px solid #eeeeee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>HÓA ĐƠN TIỀN THUÊ NHÀ</h2>
+      </div>
+      <div class="content">
+        <h3>Kính gửi Ông/Bà {{fullName}},</h3>
+        <p>
+          Ban quản lý <strong>AptApp</strong> gửi đến quý cư dân thông báo tiền
+          thuê nhà cho căn hộ <strong>{{roomNumber}}</strong>:
+        </p>
+        <table class="bill-table">
+          <tr>
+            <td>Kỳ thanh toán:</td>
+            <td style="text-align: right">Tháng {{month}}/{{year}}</td>
+          </tr>
+          <tr class="total-row">
+            <td>SỐ TIỀN THUÊ:</td>
+            <td style="text-align: right">{{rentAmount}}đ</td>
+          </tr>
+          <tr>
+            <td>Hạn thanh toán:</td>
+            <td style="text-align: right; color: #d9534f">{{dueDate}}</td>
+          </tr>
+        </table>
+        <div class="payment-instruction">
+          Vui lòng đến văn phòng Ban quản lý để thanh toán. <br />
+          <small
+            >* Trạng thái sẽ được cập nhật sau khi quản trị viên duyệt.</small
+          >
+        </div>
+      </div>
+      <div class="footer">
+        <p>
+          <strong>Ban Quản Lý AptApp</strong><br />Cảm ơn quý cư dân đã tin
+          tưởng dịch vụ của chúng tôi!
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
