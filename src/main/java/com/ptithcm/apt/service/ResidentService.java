@@ -1,6 +1,7 @@
 package com.ptithcm.apt.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,8 @@ public interface ResidentService {
     ResidentDetailResponse updateResident(Long residentId, UpdateResidentRequest request);
 
     List<MyApartmentResponse> getMyApartments();
+
+    Optional<String> findNameByUserId(Long userId);
 
     Page<ResidentListResponse> getActiveResidents(String roomNumber, Pageable pageable);
 

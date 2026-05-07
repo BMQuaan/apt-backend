@@ -41,6 +41,12 @@ public class ResidentServiceImpl implements ResidentService {
         private final BillRepository billRepository;
 
         @Override
+        public Optional<String> findNameByUserId(Long userId) {
+                return residentRepository.findByUser_Id(userId)
+                                .map(Resident::getFullName);
+        }
+
+        @Override
         @Transactional
         public ResidentResponse addMemberToApartment(String roomNumber, MemberRequest request) {
                 Apartment apartment = apartmentRepository.findByRoomNumber(roomNumber)
