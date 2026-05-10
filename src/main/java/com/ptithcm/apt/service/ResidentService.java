@@ -14,6 +14,7 @@ import com.ptithcm.apt.dto.response.MyApartmentResponse;
 import com.ptithcm.apt.dto.response.ResidentDetailResponse;
 import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
+import com.ptithcm.apt.entity.Resident;
 
 public interface ResidentService {
     ResidentDetailResponse updateResident(Long residentId, UpdateResidentRequest request);
@@ -31,5 +32,7 @@ public interface ResidentService {
     List<ResidentListResponse> getResidentsByApartment(Long apartmentId);
 
     ResidentDetailResponse getResidentDetailById(Long residentId);
+
+    Resident findByUserId(Long userId);
 
 }

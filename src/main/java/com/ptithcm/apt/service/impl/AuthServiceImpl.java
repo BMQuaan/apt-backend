@@ -178,12 +178,15 @@ public class AuthServiceImpl implements AuthService {
 
         // 3 lần / 30p
         LocalDateTime oneHourAgo = LocalDateTime.now().minusMinutes(30);
-        long requestCount = otpService.countByEmailSince(email, oneHourAgo);
+        long requestCount = otpService.countByEmailSince(email, oneHourAgo); // old:
+                                                                             // otpRepository.countByEmailAndCreatedAtAfter(email,
+                                                                             // oneHourAgo)
         if (requestCount >= 3) {
             throw new RuntimeException("Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau 30 phút.");
         }
 
-        otpService.findTopActiveByEmail(email)
+        otpService.findTopActiveByEmail(email) // old:
+                                               // otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(email)
                 .ifPresent(oldOtp -> {
                     oldOtp.setIsRevoked(true);
                     otpService.save(oldOtp);
@@ -208,7 +211,8 @@ public class AuthServiceImpl implements AuthService {
     public String verifyOtp(VerifyOtpRequest request) {
         userService.findByUsername(request.email()); // throws NotFoundException nếu không tồn tại
 
-        Otp activeOtp = otpService.findTopActiveByEmail(request.email())
+        Otp activeOtp = otpService.findTopActiveByEmail(request.email()) // old:
+                                                                         // otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(request.email())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu hoặc OTP đã bị hủy."));
 
         if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -244,7 +248,8 @@ public class AuthServiceImpl implements AuthService {
     public void resetPassword(ResetPasswordRequest request) {
         String hashedTokenFromUser = hashToken(request.resetToken());
 
-        Otp activeOtp = otpService.findByResetTokenAndValid(hashedTokenFromUser)
+        Otp activeOtp = otpService.findByResetTokenAndValid(hashedTokenFromUser) // old:
+                                                                                 // otpRepository.findByResetTokenAndIsUsedFalseAndIsRevokedFalse(hashedTokenFromUser)
                 .orElseThrow(() -> new RuntimeException("Phiên làm việc không hợp lệ hoặc đã bị hủy."));
 
         if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -294,7 +299,9 @@ public class AuthServiceImpl implements AuthService {
     // =====================================================
 
     private void revokeTokensByDeviceType(User user, String deviceType) {
-        List<Token> validTokens = tokenService.findAllValidByUserAndDevice(user.getId(), deviceType);
+        List<Token> validTokens = tokenService.findAllValidByUserAndDevice(user.getId(), deviceType); // old:
+                                                                                                      // tokenRepository.findAllValidTokenByUserAndDeviceType(user.getId(),
+                                                                                                      // deviceType)
         if (validTokens.isEmpty())
             return;
         tokenService.revokeAllAndSave(validTokens);
