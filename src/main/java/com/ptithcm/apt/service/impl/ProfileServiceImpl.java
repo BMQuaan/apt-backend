@@ -7,11 +7,10 @@ import com.ptithcm.apt.dto.response.ProfileInfoResponse;
 import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
 import com.ptithcm.apt.entity.User;
-import com.ptithcm.apt.exception.NotFoundException;
-import com.ptithcm.apt.repository.ResidentApartmentRepository;
-import com.ptithcm.apt.repository.ResidentRepository;
-import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.service.ProfileService;
+import com.ptithcm.apt.service.ResidentApartmentService;
+import com.ptithcm.apt.service.ResidentService;
+import com.ptithcm.apt.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,26 +25,24 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ProfileServiceImpl implements ProfileService {
 
-    private final UserRepository userRepository;
-    private final ResidentRepository residentRepository;
-    private final ResidentApartmentRepository residentApartmentRepository;
+    private final UserService userService;
+    private final ResidentService residentService;
+    private final ResidentApartmentService residentApartmentService;
 
     private Resident getCurrentResident() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy tài khoản người dùng"));
-
-        return residentRepository.findByUser_Id(user.getId())
-                .orElseThrow(() -> new NotFoundException("Tài khoản chưa được liên kết với hồ sơ cư dân nào"));
+        User user = userService.findByUsername(username);
+        return residentService.findByUserId(user.getId());
     }
+
+    // =========================================================================
 
     @Override
     public ProfileDashboardResponse getProfileDashboard() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository
-                .findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentService.findActiveByResidentId(resident.getId());
 
         return ProfileDashboardResponse.builder()
                 .personalInfo(buildProfileInfo(resident))
@@ -64,29 +61,26 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileApartmentResponse getLivingApartment() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository
-                .findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentService.findActiveByResidentId(resident.getId());
         return extractLivingApartment(activeApartments);
     }
 
     @Override
     public List<ProfileApartmentResponse> getOwnedApartments() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository
-                .findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentService.findActiveByResidentId(resident.getId());
         return extractOwnedApartments(activeApartments);
     }
 
     @Override
     public List<FamilyMemberResponse> getFamilyMembers() {
         Resident resident = getCurrentResident();
-        List<ResidentApartment> activeApartments = residentApartmentRepository
-                .findByResident_IdAndIsActiveTrue(resident.getId());
+        List<ResidentApartment> activeApartments = residentApartmentService.findActiveByResidentId(resident.getId());
         return extractFamilyMembers(resident, activeApartments);
     }
 
     // =========================================================================
-    // CÁC HÀM HELPER NỘI BỘ
+    // HELPER METHODS (build / extract)
     // =========================================================================
 
     private ProfileInfoResponse buildProfileInfo(Resident resident) {
@@ -102,7 +96,8 @@ public class ProfileServiceImpl implements ProfileService {
 
     private ProfileApartmentResponse extractLivingApartment(List<ResidentApartment> activeApartments) {
         return activeApartments.stream()
-                .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole())
+                .filter(ra -> "TENANT".equals(ra.getRole())
+                        || "MEMBER".equals(ra.getRole())
                         || ("OWNER".equals(ra.getRole()) && ra.getIsHead()))
                 .findFirst()
                 .map(this::mapToApartmentResponse)
@@ -116,9 +111,12 @@ public class ProfileServiceImpl implements ProfileService {
                 .toList();
     }
 
-    private List<FamilyMemberResponse> extractFamilyMembers(Resident resident, List<ResidentApartment> myActiveLinks) {
+    private List<FamilyMemberResponse> extractFamilyMembers(Resident resident,
+            List<ResidentApartment> myActiveLinks) {
         Long livingAptId = myActiveLinks.stream()
-                .filter(ra -> "TENANT".equals(ra.getRole()) || "MEMBER".equals(ra.getRole()) || ra.getIsHead())
+                .filter(ra -> "TENANT".equals(ra.getRole())
+                        || "MEMBER".equals(ra.getRole())
+                        || ra.getIsHead())
                 .map(ra -> ra.getApartment().getId())
                 .findFirst()
                 .orElse(null);
@@ -130,15 +128,14 @@ public class ProfileServiceImpl implements ProfileService {
         // livingAptId != null
         List<FamilyMemberResponse> familyMembers = new ArrayList<>();
 
-        List<ResidentApartment> aptResidents = residentApartmentRepository
-                .findByApartment_IdAndIsActiveTrue(livingAptId);
+        List<ResidentApartment> aptResidents = residentApartmentService.findActiveByApartmentId(livingAptId);
 
         for (ResidentApartment aptRes : aptResidents) {
             if (aptRes.getResident().getId().equals(resident.getId()))
                 continue;
 
             boolean isAlreadyAdded = familyMembers.stream()
-                    .anyMatch(member -> member.residentId().equals(aptRes.getResident().getId()));
+                    .anyMatch(m -> m.residentId().equals(aptRes.getResident().getId()));
 
             if (!isAlreadyAdded) {
                 familyMembers.add(FamilyMemberResponse.builder()

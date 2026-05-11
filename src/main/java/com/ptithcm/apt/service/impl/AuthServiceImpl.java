@@ -11,13 +11,7 @@ import com.ptithcm.apt.entity.Otp;
 import com.ptithcm.apt.entity.Token;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.exception.NotFoundException;
-import com.ptithcm.apt.repository.OtpRepository;
-import com.ptithcm.apt.repository.ResidentRepository;
-import com.ptithcm.apt.repository.TokenRepository;
-import com.ptithcm.apt.repository.UserRepository;
-import com.ptithcm.apt.service.AuthService;
-import com.ptithcm.apt.service.EmailService;
-import com.ptithcm.apt.service.JwtService;
+import com.ptithcm.apt.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -41,14 +35,14 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final TokenRepository tokenRepository;
-    private final ResidentRepository residentRepository;
+    private final UserService userService;
+    private final TokenService tokenService;
+    private final OtpService otpService;
+    private final ResidentService residentService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    private final OtpRepository otpRepository;
 
     @Value("${app.jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
@@ -61,8 +55,7 @@ public class AuthServiceImpl implements AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new NotFoundException("User không tồn tại"));
+        User user = userService.findByUsername(request.username());
 
         String jwtToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -70,7 +63,6 @@ public class AuthServiceImpl implements AuthService {
         String deviceType = getDeviceType(httpRequest);
 
         revokeTokensByDeviceType(user, deviceType);
-
         saveUserToken(user, refreshToken, deviceType);
 
         return TokenResponse.builder()
@@ -102,8 +94,7 @@ public class AuthServiceImpl implements AuthService {
                     throw new RuntimeException("Email Google này chưa được xác thực.");
                 }
 
-                User user = userRepository.findByUsername(email)
-                        .orElseThrow(() -> new NotFoundException("Tài khoản chưa được đăng ký trên hệ thống. Vui lòng liên hệ Ban quản lý."));
+                User user = userService.findByUsername(email);
 
                 if (!user.getIsActive()) {
                     throw new RuntimeException("Tài khoản của bạn đã bị khóa.");
@@ -112,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
                 // Check Google ID Match
                 if (user.getGoogleId() == null) {
                     user.setGoogleId(googleSubjectId);
-                    userRepository.save(user);
+                    userService.save(user);
                 } else if (!user.getGoogleId().equals(googleSubjectId)) {
                     throw new RuntimeException("Tài khoản này đã được liên kết với một hồ sơ Google khác.");
                 }
@@ -156,12 +147,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (username != null) {
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new NotFoundException("User không tồn tại"));
+            User user = userService.findByUsername(username);
 
             String hashedToken = hashToken(rawRefreshToken);
 
-            boolean isTokenValidInDb = tokenRepository.findByToken(hashedToken)
+            boolean isTokenValidInDb = tokenService.findByToken(hashedToken)
                     .map(t -> !t.getRevoked() && t.getExpiresAt().isAfter(LocalDateTime.now()))
                     .orElse(false);
 
@@ -178,13 +168,143 @@ public class AuthServiceImpl implements AuthService {
         throw new RuntimeException("Refresh token đã hết hạn hoặc bị thu hồi");
     }
 
+    // =====================================================
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        String email = request.email();
+        userService.findByUsername(email); // throws NotFoundException nếu không tồn tại
+
+        // 3 lần / 30p
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusMinutes(30);
+        long requestCount = otpService.countByEmailSince(email, oneHourAgo); // old:
+                                                                             // otpRepository.countByEmailAndCreatedAtAfter(email,
+                                                                             // oneHourAgo)
+        if (requestCount >= 3) {
+            throw new RuntimeException("Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau 30 phút.");
+        }
+
+        otpService.findTopActiveByEmail(email) // old:
+                                               // otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(email)
+                .ifPresent(oldOtp -> {
+                    oldOtp.setIsRevoked(true);
+                    otpService.save(oldOtp);
+                });
+
+        String plainOtp = generateSecureOtp();
+
+        Otp newOtp = Otp.builder()
+                .email(email)
+                .otpHash(passwordEncoder.encode(plainOtp))
+                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .build();
+        otpService.save(newOtp);
+
+        Map<String, String> templateModel = new HashMap<>();
+        templateModel.put("OTP_CODE", plainOtp);
+        emailService.sendHtmlEmail(email, "Mã OTP Khôi Phục Mật Khẩu - APT", "otp-email.html", templateModel);
+    }
+
+    @Override
+    @Transactional
+    public String verifyOtp(VerifyOtpRequest request) {
+        userService.findByUsername(request.email()); // throws NotFoundException nếu không tồn tại
+
+        Otp activeOtp = otpService.findTopActiveByEmail(request.email()) // old:
+                                                                         // otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(request.email())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu hoặc OTP đã bị hủy."));
+
+        if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+            activeOtp.setIsRevoked(true);
+            otpService.save(activeOtp);
+            throw new RuntimeException("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.");
+        }
+
+        // Check Hash & Anti Brute-Force
+        if (!passwordEncoder.matches(request.otp(), activeOtp.getOtpHash())) {
+            activeOtp.setAttemptCount(activeOtp.getAttemptCount() + 1);
+            if (activeOtp.getAttemptCount() >= 5) {
+                activeOtp.setIsRevoked(true);
+                otpService.save(activeOtp);
+                throw new RuntimeException("Nhập sai quá 5 lần. Yêu cầu khôi phục mật khẩu đã bị hủy.");
+            }
+            otpService.save(activeOtp);
+            throw new RuntimeException(
+                    "Mã OTP không chính xác. Bạn còn " + (5 - activeOtp.getAttemptCount()) + " lần thử.");
+        }
+
+        String rawResetToken = "reset_" + UUID.randomUUID().toString();
+        String hashedResetToken = hashToken(rawResetToken);
+        activeOtp.setResetToken(hashedResetToken);
+        activeOtp.setExpiresAt(LocalDateTime.now().plusMinutes(10)); // Cho thêm 10 phút để gõ pass mới
+        otpService.save(activeOtp);
+
+        return rawResetToken;
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        String hashedTokenFromUser = hashToken(request.resetToken());
+
+        Otp activeOtp = otpService.findByResetTokenAndValid(hashedTokenFromUser) // old:
+                                                                                 // otpRepository.findByResetTokenAndIsUsedFalseAndIsRevokedFalse(hashedTokenFromUser)
+                .orElseThrow(() -> new RuntimeException("Phiên làm việc không hợp lệ hoặc đã bị hủy."));
+
+        if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+            activeOtp.setIsRevoked(true);
+            otpService.save(activeOtp);
+            throw new RuntimeException("Phiên làm việc đã hết hạn. Vui lòng thử lại từ đầu.");
+        }
+
+        User user = userService.findByUsername(activeOtp.getEmail());
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userService.save(user);
+
+        activeOtp.setIsUsed(true);
+        activeOtp.setIsRevoked(true);
+        otpService.save(activeOtp);
+
+        revokeTokensByDeviceType(user, "WEB");
+        revokeTokensByDeviceType(user, "MOBILE");
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        User user = userService.findByUsername(currentUsername);
+
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userService.save(user);
+
+        revokeTokensByDeviceType(user, "WEB");
+        revokeTokensByDeviceType(user, "MOBILE");
+    }
+
+    // =====================================================
+    // HELPER METHODS
+    // =====================================================
+
     private void revokeTokensByDeviceType(User user, String deviceType) {
-        List<Token> validTokens = tokenRepository.findAllValidTokenByUserAndDeviceType(user.getId(), deviceType);
+        List<Token> validTokens = tokenService.findAllValidByUserAndDevice(user.getId(), deviceType); // old:
+                                                                                                      // tokenRepository.findAllValidTokenByUserAndDeviceType(user.getId(),
+                                                                                                      // deviceType)
         if (validTokens.isEmpty())
             return;
-
-        validTokens.forEach(token -> token.setRevoked(true));
-        tokenRepository.saveAll(validTokens);
+        tokenService.revokeAllAndSave(validTokens);
     }
 
     private void saveUserToken(User user, String rawRefreshToken, String deviceType) {
@@ -197,7 +317,18 @@ public class AuthServiceImpl implements AuthService {
                 .expiresAt(LocalDateTime.now().plus(refreshTokenExpiration, ChronoUnit.MILLIS))
                 .revoked(false)
                 .build();
-        tokenRepository.save(token);
+        tokenService.save(token);
+    }
+
+    private TokenResponse.UserInfo buildUserInfo(User user) {
+        String residentName = residentService.findNameByUserId(user.getId()).orElse(null);
+
+        return TokenResponse.UserInfo.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .role(user.getRole().getRoleName())
+                .residentName(residentName)
+                .build();
     }
 
     private String hashToken(String token) {
@@ -231,149 +362,9 @@ public class AuthServiceImpl implements AuthService {
         return "WEB";
     }
 
-    // =====================================================
-
-    @Override
-    @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) {
-        String email = request.email();
-        userRepository.findByUsername(email)
-                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
-
-        // 3 lần / 30p
-        LocalDateTime oneHourAgo = LocalDateTime.now().minusMinutes(30);
-        long requestCount = otpRepository.countByEmailAndCreatedAtAfter(email, oneHourAgo);
-        if (requestCount >= 3) {
-            throw new RuntimeException("Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau 30 phút.");
-        }
-
-        otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(email)
-                .ifPresent(oldOtp -> {
-                    oldOtp.setIsRevoked(true);
-                    otpRepository.save(oldOtp);
-                });
-
-        String plainOtp = generateSecureOtp();
-
-        Otp newOtp = Otp.builder()
-                .email(email)
-                .otpHash(passwordEncoder.encode(plainOtp))
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build();
-        otpRepository.save(newOtp);
-
-        Map<String, String> templateModel = new HashMap<>();
-        templateModel.put("OTP_CODE", plainOtp);
-        emailService.sendHtmlEmail(email, "Mã OTP Khôi Phục Mật Khẩu - APT", "otp-email.html", templateModel);
-    }
-
-    @Override
-    @Transactional
-    public String verifyOtp(VerifyOtpRequest request) {
-
-        userRepository.findByUsername(request.email())
-                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
-
-        Otp activeOtp = otpRepository.findTopByEmailAndIsUsedFalseAndIsRevokedFalseOrderByCreatedAtDesc(request.email())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu hoặc OTP đã bị hủy."));
-
-        if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
-            activeOtp.setIsRevoked(true);
-            otpRepository.save(activeOtp);
-            throw new RuntimeException("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.");
-        }
-
-        // Check Hash & Anti Brute-Force
-        if (!passwordEncoder.matches(request.otp(), activeOtp.getOtpHash())) {
-            activeOtp.setAttemptCount(activeOtp.getAttemptCount() + 1);
-            if (activeOtp.getAttemptCount() >= 5) {
-                activeOtp.setIsRevoked(true);
-                otpRepository.save(activeOtp);
-                throw new RuntimeException("Nhập sai quá 5 lần. Yêu cầu khôi phục mật khẩu đã bị hủy.");
-            }
-            otpRepository.save(activeOtp);
-            throw new RuntimeException(
-                    "Mã OTP không chính xác. Bạn còn " + (5 - activeOtp.getAttemptCount()) + " lần thử.");
-        }
-
-        String rawResetToken = "reset_" + UUID.randomUUID().toString();
-        String hashedResetToken = hashToken(rawResetToken);
-        activeOtp.setResetToken(hashedResetToken);
-        activeOtp.setExpiresAt(LocalDateTime.now().plusMinutes(10)); // Cho thêm 10 phút để gõ pass mới
-        otpRepository.save(activeOtp);
-
-        return rawResetToken;
-    }
-
-    @Override
-    @Transactional
-    public void resetPassword(ResetPasswordRequest request) {
-
-        String hashedTokenFromUser = hashToken(request.resetToken());
-
-        Otp activeOtp = otpRepository.findByResetTokenAndIsUsedFalseAndIsRevokedFalse(hashedTokenFromUser)
-                .orElseThrow(() -> new RuntimeException("Phiên làm việc không hợp lệ hoặc đã bị hủy."));
-
-        if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
-            activeOtp.setIsRevoked(true);
-            otpRepository.save(activeOtp);
-            throw new RuntimeException("Phiên làm việc đã hết hạn. Vui lòng thử lại từ đầu.");
-        }
-
-        User user = userRepository.findByUsername(activeOtp.getEmail())
-                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
-
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
-
-        activeOtp.setIsUsed(true);
-        activeOtp.setIsRevoked(true);
-        otpRepository.save(activeOtp);
-
-        revokeTokensByDeviceType(user, "WEB");
-        revokeTokensByDeviceType(user, "MOBILE");
-    }
-
-    @Override
-    @Transactional
-    public void changePassword(ChangePasswordRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
-
-        User user = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại."));
-
-        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
-        }
-
-        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
-        }
-
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
-
-        // revokeAllUserTokens(user);
-    }
-
-    private TokenResponse.UserInfo buildUserInfo(User user) {
-        String residentName = residentRepository.findByUser_Id(user.getId())
-                .map(r -> r.getFullName())
-                .orElse(null);
-
-        return TokenResponse.UserInfo.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole().getRoleName())
-                .residentName(residentName)
-                .build();
-    }
-
     private String generateSecureOtp() {
         SecureRandom random = new SecureRandom();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
     }
-
 }

@@ -10,6 +10,7 @@ import com.ptithcm.apt.dto.response.ResidentListResponse;
 import com.ptithcm.apt.dto.response.ResidentResponse;
 import com.ptithcm.apt.entity.*;
 import com.ptithcm.apt.enums.BillStatus;
+import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.repository.*;
 import com.ptithcm.apt.service.ResidentService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,12 @@ public class ResidentServiceImpl implements ResidentService {
         private final UserRepository userRepository;
         private final ApartmentRepository apartmentRepository;
         private final BillRepository billRepository;
+
+        @Override
+        public Optional<String> findNameByUserId(Long userId) {
+                return residentRepository.findByUser_Id(userId)
+                                .map(Resident::getFullName);
+        }
 
         @Override
         @Transactional
@@ -319,5 +326,13 @@ public class ResidentServiceImpl implements ResidentService {
                                 .contractStart(ra.getContractStart())
                                 .contractEnd(ra.getContractEnd())
                                 .build()).collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public Resident findByUserId(Long userId) {
+                return residentRepository.findByUser_Id(userId)
+                                .orElseThrow(() -> new NotFoundException(
+                                                "Tài khoản chưa được liên kết với hồ sơ cư dân nào"));
         }
 }
