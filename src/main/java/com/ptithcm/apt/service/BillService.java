@@ -21,7 +21,7 @@ public interface BillService {
         public UpdateBillStatusResponse updateBillStatus(Long billId, UpdateBillStatusRequest req);
 
         public Page<AdminBillListResponse> getBillsByAdmin(Integer month, Integer year, Long apartmentId,
-                        BillStatus status, Pageable pageable);
+                        BillStatus status, String roomNumber, Pageable pageable);
 
         public AdminBillDetailResponse getBillDetailByAdmin(Long id);
 

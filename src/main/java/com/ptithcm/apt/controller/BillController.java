@@ -66,8 +66,10 @@ public class BillController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Long apartmentId,
             @RequestParam(required = false) BillStatus status,
+            @RequestParam(required = false) String roomNumber,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
-        Page<AdminBillListResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, pageable);
+        Page<AdminBillListResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, roomNumber,
+                pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
     }
 

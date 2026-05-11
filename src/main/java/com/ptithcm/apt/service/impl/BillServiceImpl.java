@@ -71,8 +71,6 @@ public class BillServiceImpl implements BillService {
         @Override
         @Transactional
         public BillSummaryResponse createBill(CreateBillRequest req) {
-                // LocalDateTime testDate = LocalDateTime.of(2026, 3, 15, 10, 30);
-
                 List<ServiceConfig> configs = serviceConfigRepository.findAllCurrentConfigs();
                 Map<String, BigDecimal> priceMap = configs.stream()
                                 .collect(Collectors.toMap(ServiceConfig::getServiceCode, ServiceConfig::getUnitPrice));
@@ -235,8 +233,8 @@ public class BillServiceImpl implements BillService {
 
         @Override
         public Page<AdminBillListResponse> getBillsByAdmin(Integer month, Integer year, Long apartmentId,
-                        BillStatus status, Pageable pageable) {
-                Specification<Bill> spec = BillSpecifications.hasFilters(month, year, apartmentId, status);
+                        BillStatus status, String roomNumber, Pageable pageable) {
+                Specification<Bill> spec = BillSpecifications.hasFilters(month, year, apartmentId, status, roomNumber);
                 Page<Bill> bills = billRepository.findAll(spec, pageable);
                 return bills.map(billMapper::toGetBillsByAdminResponse);
         }

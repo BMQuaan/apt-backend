@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Predicate;
 
 public class BillSpecifications {
 
-    public static Specification<Bill> hasFilters(Integer month, Integer year, Long apartmentId, BillStatus status) {
+    public static Specification<Bill> hasFilters(Integer month, Integer year, Long apartmentId, BillStatus status, String roomNumber) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -27,6 +27,15 @@ public class BillSpecifications {
             }
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (roomNumber != null && !roomNumber.trim().isEmpty()) {
+                // Phép toán: apartment.roomNumber LIKE %roomNumber%
+                // cb.lower giúp tìm kiếm không phân biệt hoa thường (case-insensitive)
+                predicates.add(cb.like(
+                    cb.lower(root.get("apartment").get("roomNumber")), 
+                    "%" + roomNumber.toLowerCase() + "%"
+                ));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
