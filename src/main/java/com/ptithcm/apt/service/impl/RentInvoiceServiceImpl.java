@@ -1,10 +1,11 @@
 package com.ptithcm.apt.service.impl;
 
-import java.security.Security;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,12 +29,12 @@ import com.ptithcm.apt.enums.RentStatus;
 import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mapper.RentInvoiceMapper;
 import com.ptithcm.apt.repository.RentInvoiceRepository;
-import com.ptithcm.apt.repository.ResidentApartmentRepository;
-import com.ptithcm.apt.repository.ResidentRepository;
-import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.RentInvoiceSpecifications;
 import com.ptithcm.apt.service.EmailService;
 import com.ptithcm.apt.service.RentInvoiceService;
+import com.ptithcm.apt.service.ResidentApartmentService;
+import com.ptithcm.apt.service.ResidentService;
+import com.ptithcm.apt.service.UserService;
 import com.ptithcm.apt.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -42,16 +43,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RentInvoiceServiceImpl implements RentInvoiceService {
         private final RentInvoiceRepository rentInvoiceRepository;
-        private final ResidentApartmentRepository residentApartmentRepository;
+        private final ResidentApartmentService residentApartmentService;
         private final RentInvoiceMapper rentInvoiceMapper;
-        private final UserRepository userRepository;
-        private final ResidentRepository residentRepository;
+        private final UserService userService;
+        private final ResidentService residentService;
+        // private final ResidentRepository residentRepository;
         private final EmailService emailService;
 
         @Override
         @Transactional
         public RentInvoiceResponse createMonthlyRentInvoice(CreateRentInvoiceRequest req) {
-                ResidentApartment contract = residentApartmentRepository.findActiveTenant(req.apartmentId())
+                ResidentApartment contract = residentApartmentService.findActiveTenant(req.apartmentId())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Apartment is marked as RENTED but no active tenant contract was found!"));
 
@@ -71,7 +73,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                                                         + "/" + req.year() + ").");
                 }
 
-                Resident owner = residentApartmentRepository.findActiveOwner(req.apartmentId()).orElse(null);
+                Resident owner = residentApartmentService.findActiveOwner(req.apartmentId()).orElse(null);
                 RentInvoice invoice = RentInvoice.builder()
                                 .apartment(contract.getApartment())
                                 .billingMonth(req.month())
@@ -132,9 +134,8 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                 rentInvoice.setPaidAt(LocalDateTime.now());
 
                 String username = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(username)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Authenticated user " + username + " not found"));
+                User currentUser = userService.findByUsername(username);
+                                
 
                 rentInvoice.setConfirmedBy(currentUser);
 
@@ -146,13 +147,13 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         public Page<UserRentInvoiceListResponse> getMyRentInvoices(Integer month, Integer year, Long apartmentId,
                         RentStatus status, Pageable pageable) {
                 String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userService.findByUsername(userName);
+
                 Long currentUserId = currentUser.getId();
 
                 // Lấy resident của user hiện tại để xác định viewerRole
-                Resident currentResident = residentRepository.findByUser_Id(currentUserId)
-                                .orElseThrow(() -> new RuntimeException("Resident not found"));
+                Resident currentResident = residentService.findByUserId(currentUserId);
+                                
 
                 Page<RentInvoice> rentInvoices = rentInvoiceRepository.findMyRentInvoices(
                                 currentUserId, apartmentId, month, year, status, pageable);
@@ -163,7 +164,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
 
                         String tenantName = null;
                         if (!isTenant && ri.getTenant().getId() != null) {
-                                tenantName = residentRepository.findById(ri.getTenant().getId())
+                                tenantName = residentService.findById(ri.getTenant().getId())
                                                 .map(Resident::getFullName)
                                                 .orElse(null);
                         }
@@ -184,8 +185,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         @Override
         public UserRentInvoiceDetailResponse getMyRentInvoiceDetailById(Long id) {
                 String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userService.findByUsername(userName);
                 Long currentUserId = currentUser.getId();
                 RentInvoice rentInvoice = rentInvoiceRepository.findByIdAndUserId(id, currentUserId)
                                 .orElseThrow(() -> new RuntimeException(
@@ -218,5 +218,26 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                                         "new_rent_invoice_template_vi.html",
                                         templateModel);
                 }
+        }
+
+        @Override
+        public Optional<RentInvoice> findRentInvoiceEntityById(Long id) {
+                return rentInvoiceRepository.findById(id);
+        }
+
+        @Override
+        public Optional<RentInvoice> findRentInvoiceByIdAndUserId(Long id, Long userId) {
+                return rentInvoiceRepository.findByIdAndUserId(id, userId);
+        }
+
+        @Override
+        public List<RentInvoice> findAllByStatusAndDueDateBefore(RentStatus status, LocalDateTime dateTime) {
+                return rentInvoiceRepository.findAllByStatusAndDueDateBefore(status, dateTime);
+        }
+
+        @Override
+        public Page<RentInvoice> findMyRentInvoices(Long userId, Long apartmentId, Integer month, Integer year,
+                        RentStatus status, Pageable pageable) {
+                return rentInvoiceRepository.findMyRentInvoices(userId, apartmentId, month, year, status, pageable);
         }
 }

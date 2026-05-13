@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Set;
 
@@ -312,6 +313,26 @@ public class BillServiceImpl implements BillService {
         public AdminBillDetailResponse getBillDetailByAdmin(Long id) {
                 Bill bill = billRepository.findById(id).orElseThrow(() -> new NotFoundException("Bill not found"));
                 return billMapper.toGetBillDetailByAdminResponse(bill);
+        }
+
+        @Override
+        public Optional<Bill> findBillEntityById(Long id) {
+                return billRepository.findById(id);
+        }
+
+        @Override
+        public Optional<Bill> findBillByIdAndUserId(Long billId, Long userId) {
+                return billRepository.findByIdAndUserId(billId, userId);
+        }
+
+        @Override
+        public List<Bill> findAllByStatusAndDueDateBefore(BillStatus status, LocalDateTime dateTime) {
+                return billRepository.findAllByStatusAndDueDateBefore(status, dateTime);
+        }
+
+        @Override
+        public boolean isApartmentHasStatus(Long apartmentId, BillStatus status) {
+                return billRepository.existsByApartmentIdAndStatus(apartmentId, status);
         }
 
 }

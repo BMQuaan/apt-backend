@@ -35,4 +35,6 @@ public interface ResidentService {
 
     Resident findByUserId(Long userId);
 
+    Optional<Resident> findById(Long userId);
+
 }
