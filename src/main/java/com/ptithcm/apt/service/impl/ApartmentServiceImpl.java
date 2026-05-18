@@ -2,6 +2,7 @@ package com.ptithcm.apt.service.impl;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -181,5 +182,10 @@ public class ApartmentServiceImpl implements ApartmentService {
                         entity.getId(), entity.getRoomNumber(), entity.getFloor(),
                         entity.getArea(), entity.getStatus(), entity.getCreatedAt()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Apartment> findById(Long id) {
+        return apartmentRepository.findById(id);
     }
 }

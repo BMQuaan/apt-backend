@@ -37,4 +37,20 @@ public class ResidentApartmentServiceImpl implements ResidentApartmentService {
     public Optional<Resident> findActiveOwner(Long aptId) {
         return residentApartmentRepository.findActiveOwner(aptId);
     }
+
+    @Override
+    public boolean existsByApartmentIdAndRoleAndIsActiveTrue(Long apartmentId, String role) {
+        return residentApartmentRepository.existsByApartmentIdAndRoleAndIsActiveTrue(apartmentId, role);
+    }
+
+    @Override
+    public Optional<ResidentApartment> findByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId) {
+        return residentApartmentRepository.findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apartmentId);
+    }
+
+    @Override
+    public boolean existsByApartmentIdAndResidentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId, Long residentId) {
+        return residentApartmentRepository.existsByApartmentIdAndResidentIdAndIsHeadTrueAndIsActiveTrue(apartmentId,
+                residentId);
+    }
 }

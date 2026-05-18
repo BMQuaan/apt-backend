@@ -3,6 +3,7 @@ package com.ptithcm.apt.service;
 import com.ptithcm.apt.dto.request.ServicePriceUpdateRequest;
 import com.ptithcm.apt.dto.response.AdminServiceConfigResponse;
 import com.ptithcm.apt.dto.response.ServiceConfigResponse;
+import com.ptithcm.apt.entity.ServiceConfig;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,4 +13,5 @@ public interface ServiceConfigService {
     public List<AdminServiceConfigResponse> getAdminDashboardPrices();
     public void cancelUpcomingUpdate(String serviceCode);
     public List<ServiceConfigResponse> getPricesByDate(LocalDate targetDate);
+    public List<ServiceConfig> findAllCurrentConfigs();
 }

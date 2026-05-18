@@ -1,6 +1,7 @@
 package com.ptithcm.apt.service.impl;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class MonthlyMetricImpl implements MonthlyMetricService {
+public class MonthlyMetricServiceImpl implements MonthlyMetricService {
         private final MonthlyMetricMapper monthlyMetricMapper;
         private final MonthlyMetricRepository monthlyMetricRepository;
         private final ApartmentRepository apartmentRepository;
@@ -65,6 +66,11 @@ public class MonthlyMetricImpl implements MonthlyMetricService {
                                                 .latestElectricity(BigDecimal.ZERO)
                                                 .latestWater(BigDecimal.ZERO)
                                                 .build());
+        }
+
+        @Override
+        public Optional<MonthlyMetric> findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(Long apartmentId) {
+                return monthlyMetricRepository.findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(apartmentId);
         }
 
 }

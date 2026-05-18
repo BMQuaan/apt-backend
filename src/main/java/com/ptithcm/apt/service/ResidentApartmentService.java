@@ -14,5 +14,11 @@ public interface ResidentApartmentService {
 
     Optional<ResidentApartment> findActiveTenant(Long aptId);
 
-     Optional<Resident> findActiveOwner(Long aptId);
+    Optional<Resident> findActiveOwner(Long aptId);
+
+    boolean existsByApartmentIdAndRoleAndIsActiveTrue(Long apartmentId, String role);
+
+    Optional<ResidentApartment> findByApartmentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId);
+
+    boolean existsByApartmentIdAndResidentIdAndIsHeadTrueAndIsActiveTrue(Long apartmentId, Long residentId);
 }

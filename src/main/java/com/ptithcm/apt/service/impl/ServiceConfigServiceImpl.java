@@ -24,7 +24,6 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
     private final ServiceConfigMapper serviceConfigMapper;
     private final ServiceConfigRepository serviceConfigRepository;
 
-
     @Override
     @Transactional
     public void updateServicePrice(ServicePriceUpdateRequest request) {
@@ -38,7 +37,8 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
 
         if (normalizedEffectiveDate.isBefore(startOfNextMonth)) {
             throw new IllegalArgumentException("Tháng áp dụng cho dịch vụ " + request.serviceCode() +
-                    " phải bắt đầu từ tháng " + startOfNextMonth.getMonthValue() + "/" + startOfNextMonth.getYear() + " trở đi.");
+                    " phải bắt đầu từ tháng " + startOfNextMonth.getMonthValue() + "/" + startOfNextMonth.getYear()
+                    + " trở đi.");
         }
 
         if (request.newPrice().compareTo(currentConfig.getUnitPrice()) == 0) {
@@ -96,7 +96,8 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
     @Transactional
     public void cancelUpcomingUpdate(String serviceCode) {
         ServiceConfig upcomingConfig = serviceConfigRepository.findUpcomingConfig(serviceCode, LocalDate.now())
-                .orElseThrow(() -> new NotFoundException("Không có bản ghi chờ cập nhật nào cho dịch vụ: " + serviceCode));
+                .orElseThrow(
+                        () -> new NotFoundException("Không có bản ghi chờ cập nhật nào cho dịch vụ: " + serviceCode));
 
         serviceConfigRepository.delete(upcomingConfig);
     }
@@ -106,5 +107,10 @@ public class ServiceConfigServiceImpl implements ServiceConfigService {
         List<ServiceConfig> activeConfigs = serviceConfigRepository.findAllConfigsActiveOnDate(targetDate);
 
         return serviceConfigMapper.toResponseList(activeConfigs);
+    }
+
+    @Override
+    public List<ServiceConfig> findAllCurrentConfigs() {
+        return serviceConfigRepository.findAllCurrentConfigs();
     }
 }

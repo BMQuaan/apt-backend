@@ -37,18 +37,17 @@ import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
 import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mapper.BillMapper;
-import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
-import com.ptithcm.apt.repository.MonthlyMetricRepository;
-import com.ptithcm.apt.repository.ResidentApartmentRepository;
-import com.ptithcm.apt.repository.ResidentRepository;
-import com.ptithcm.apt.repository.ServiceConfigRepository;
-import com.ptithcm.apt.repository.UserRepository;
 import com.ptithcm.apt.repository.specifications.BillSpecifications;
+import com.ptithcm.apt.service.ApartmentService;
 import com.ptithcm.apt.service.BillService;
 import com.ptithcm.apt.service.EmailService;
 import com.ptithcm.apt.service.MonthlyMetricService;
 import com.ptithcm.apt.service.RentInvoiceService;
+import com.ptithcm.apt.service.ResidentApartmentService;
+import com.ptithcm.apt.service.ResidentService;
+import com.ptithcm.apt.service.ServiceConfigService;
+import com.ptithcm.apt.service.UserService;
 import com.ptithcm.apt.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -58,32 +57,32 @@ import lombok.RequiredArgsConstructor;
 public class BillServiceImpl implements BillService {
 
         private final BillRepository billRepository;
-        private final ApartmentRepository apartmentRepository;
-        private final UserRepository userRepository;
+        private final ApartmentService apartmentService;
+        private final UserService userService;
         private final BillMapper billMapper;
         private final RentInvoiceService rentInvoiceService;
-        private final ServiceConfigRepository serviceConfigRepository;
+        private final ServiceConfigService serviceConfigService;
         private final MonthlyMetricService monthlyMetricService;
-        private final MonthlyMetricRepository monthlyMetricRepository;
-        private final ResidentApartmentRepository residentApartmentRepository;
+        private final ResidentApartmentService residentApartmentService;
         private final EmailService emailService;
-        private final ResidentRepository residentRepository;
+        private final ResidentService residentService;
 
         @Override
         @Transactional
         public BillSummaryResponse createBill(CreateBillRequest req) {
-                List<ServiceConfig> configs = serviceConfigRepository.findAllCurrentConfigs();
+                List<ServiceConfig> configs = serviceConfigService.findAllCurrentConfigs();
                 Map<String, BigDecimal> priceMap = configs.stream()
                                 .collect(Collectors.toMap(ServiceConfig::getServiceCode, ServiceConfig::getUnitPrice));
 
-                Apartment apt = apartmentRepository.findById(req.apartmentId())
-                                .orElseThrow(() -> new RuntimeException("Apartment not found"));
+                Apartment apt = apartmentService.findById(req.apartmentId()).orElseThrow(() -> new NotFoundException(
+                                "Apartment not found"));
+
                 if ("AVAILABLE".equals(apt.getStatus())) {
                         throw new RuntimeException(
                                         "Cannot create a bill for an AVAILABLE apartment.");
                 }
 
-                MonthlyMetric lastMetric = monthlyMetricRepository
+                MonthlyMetric lastMetric = monthlyMetricService
                                 .findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(apt.getId())
                                 .orElse(null);
 
@@ -97,8 +96,7 @@ public class BillServiceImpl implements BillService {
                 }
 
                 String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userService.findByUsername(userName);
 
                 BigDecimal oldElec = (lastMetric != null) ? lastMetric.getElectricityNew() : BigDecimal.ZERO;
                 BigDecimal oldWater = (lastMetric != null) ? lastMetric.getWaterNew() : BigDecimal.ZERO;
@@ -136,7 +134,7 @@ public class BillServiceImpl implements BillService {
                 MonthlyMetricResponse metricRes = null;
 
                 boolean shouldCreateRentInvoice = "RENTED".equals(apt.getStatus())
-                                || residentApartmentRepository.existsByApartmentIdAndRoleAndIsActiveTrue(apt.getId(),
+                                || residentApartmentService.existsByApartmentIdAndRoleAndIsActiveTrue(apt.getId(),
                                                 "TENANT");
                 if (shouldCreateRentInvoice) {
                         CreateRentInvoiceRequest rentReq = new CreateRentInvoiceRequest(
@@ -162,7 +160,7 @@ public class BillServiceImpl implements BillService {
                 }
 
                 try {
-                        ResidentApartment headResident = residentApartmentRepository
+                        ResidentApartment headResident = residentApartmentService
                                         .findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apt.getId())
                                         .orElse(null);
 
@@ -223,9 +221,8 @@ public class BillServiceImpl implements BillService {
                 bill.setPaidAt(LocalDateTime.now());
 
                 String username = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(username)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Authenticated user " + username + " not found"));
+                User currentUser = userService.findByUsername(username);
+
                 bill.setConfirmedBy(currentUser);
 
                 billRepository.save(bill);
@@ -244,11 +241,10 @@ public class BillServiceImpl implements BillService {
         public Page<UserBillListResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
                         Pageable pageable) {
                 String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userService.findByUsername(userName);
 
-                Resident currentResident = residentRepository.findByUser_Id(currentUser.getId())
-                                .orElseThrow(() -> new RuntimeException("Resident not found"));
+                Resident currentResident = residentService.findByUserId(currentUser.getId());
+
                 Long currentUserId = currentUser.getId();
                 Page<Bill> bills = billRepository.findMyBills(currentUserId, apartmentId, month, year, status,
                                 pageable);
@@ -259,7 +255,7 @@ public class BillServiceImpl implements BillService {
                                 .collect(Collectors.toSet());
 
                 Map<Long, Resident> tenantByApartment = apartmentIds.stream()
-                                .flatMap(aptId -> residentApartmentRepository
+                                .flatMap(aptId -> residentApartmentService
                                                 .findActiveTenant(aptId)
                                                 .stream())
                                 .collect(Collectors.toMap(
@@ -272,7 +268,7 @@ public class BillServiceImpl implements BillService {
 
                         // isHead = true → đang là chủ hộ (tự ở hoặc đang thuê đứng tên)
                         // isHead = false → OWNER không ở đây, đang cho thuê
-                        boolean isHead = residentApartmentRepository
+                        boolean isHead = residentApartmentService
                                         .existsByApartmentIdAndResidentIdAndIsHeadTrueAndIsActiveTrue(
                                                         aptId, currentResident.getId());
 
@@ -299,8 +295,8 @@ public class BillServiceImpl implements BillService {
         @Override
         public UserBillDetailResponse getMyBillDetailById(Long id) {
                 String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userService.findByUsername(userName);
+
                 Long currentUserId = currentUser.getId();
                 Bill bill = billRepository.findByIdAndUserId(id, currentUserId)
                                 .orElseThrow(() -> new RuntimeException(
