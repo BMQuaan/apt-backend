@@ -13,6 +13,7 @@ import com.ptithcm.apt.dto.request.ApartmentRequest;
 import com.ptithcm.apt.dto.response.ApartmentResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.repository.ApartmentRepository;
+import com.ptithcm.apt.repository.ResidentApartmentRepository;
 import com.ptithcm.apt.service.ApartmentService;
 
 import lombok.Getter;
@@ -26,6 +27,7 @@ import lombok.Setter;
 public class ApartmentServiceImpl implements ApartmentService {
 
     private final ApartmentRepository apartmentRepository;
+    private final ResidentApartmentRepository residentApartmentRepository;
 
     @Override
     public Page<ApartmentResponse> getAllApartments(int page) {
@@ -63,21 +65,12 @@ public class ApartmentServiceImpl implements ApartmentService {
             throw new RuntimeException("The room number already exists!");
         }
 
-        // Tạo Entity để chuẩn bị lưu vào DB
         Apartment apartmentSave = new Apartment();
         apartmentSave.setRoomNumber(apartment.getRoomNumber());
         apartmentSave.setFloor(apartment.getFloor());
         apartmentSave.setArea(apartment.getArea());
 
-        if (apartment.getStatus() == null || apartment.getStatus().trim().isEmpty()) {
-            apartmentSave.setStatus("AVAILABLE");
-        } else if (!apartment.getStatus().equals("AVAILABLE") &&
-                !apartment.getStatus().equals("RENTED") &&
-                !apartment.getStatus().equals("OWNED")) {
-            throw new RuntimeException("Invalid status! Allowed values are: AVAILABLE, RENTED, OWNED");
-        } else {
-            apartmentSave.setStatus(apartment.getStatus());
-        }
+        apartmentSave.setStatus("AVAILABLE");
 
         Apartment savedEntity = apartmentRepository.save(apartmentSave);
 
@@ -122,12 +115,22 @@ public class ApartmentServiceImpl implements ApartmentService {
         apartment.setArea(apartmentDetails.getArea());
 
         if (apartmentDetails.getStatus() != null && !apartmentDetails.getStatus().trim().isEmpty()) {
-            if (!apartmentDetails.getStatus().equals("AVAILABLE") &&
-                    !apartmentDetails.getStatus().equals("RENTED") &&
-                    !apartmentDetails.getStatus().equals("OWNED")) {
+            String newStatus = apartmentDetails.getStatus().toUpperCase();
+            String currentStatus = apartment.getStatus();
+
+            if (!newStatus.equals("AVAILABLE") && !newStatus.equals("RENTED") && !newStatus.equals("OWNED")) {
                 throw new RuntimeException("Invalid status! Allowed values are: AVAILABLE, RENTED, OWNED");
             }
-            apartment.setStatus(apartmentDetails.getStatus());
+
+            if (newStatus.equals("AVAILABLE") && !currentStatus.equals("AVAILABLE")) {
+                boolean hasActiveResidents = residentApartmentRepository.existsByApartmentIdAndIsActiveTrue(id);
+                if (hasActiveResidents) {
+                    throw new RuntimeException(
+                            "Không thể chuyển căn hộ về trạng thái trống (AVAILABLE) vì vẫn đang có cư dân cư trú hoặc hợp đồng còn hiệu lực!");
+                }
+            }
+
+            apartment.setStatus(newStatus);
         }
 
         Apartment updatedEntity = apartmentRepository.save(apartment);

@@ -35,6 +35,8 @@ public interface ResidentApartmentRepository extends JpaRepository<ResidentApart
 
         boolean existsByResidentIdAndIsActiveTrue(Long residentId);
 
+        boolean existsByApartmentIdAndIsActiveTrue(Long apartmentId);
+
         // Lấy tất cả các hợp đồng/quan hệ với căn hộ đang còn hiệu lực của 1 cư dân
         List<ResidentApartment> findByResident_IdAndIsActiveTrue(Long residentId);
 
