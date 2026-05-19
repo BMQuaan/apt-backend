@@ -188,4 +188,9 @@ public class ApartmentServiceImpl implements ApartmentService {
     public Optional<Apartment> findById(Long id) {
         return apartmentRepository.findById(id);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return apartmentRepository.existsById(id);
+    }
 }

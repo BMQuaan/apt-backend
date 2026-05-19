@@ -47,7 +47,6 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         private final RentInvoiceMapper rentInvoiceMapper;
         private final UserService userService;
         private final ResidentService residentService;
-        // private final ResidentRepository residentRepository;
         private final EmailService emailService;
 
         @Override

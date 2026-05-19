@@ -23,4 +23,6 @@ public interface ApartmentService {
     List<ApartmentResponse> getApartmentsByStatus(String status);
 
     Optional<Apartment> findById(Long id);
+
+    boolean existsById(Long id);
 }

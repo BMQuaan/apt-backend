@@ -11,8 +11,8 @@ import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
 import com.ptithcm.apt.entity.MonthlyMetric;
 import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mapper.MonthlyMetricMapper;
-import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.MonthlyMetricRepository;
+import com.ptithcm.apt.service.ApartmentService;
 import com.ptithcm.apt.service.MonthlyMetricService;
 
 import jakarta.transaction.Transactional;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class MonthlyMetricServiceImpl implements MonthlyMetricService {
         private final MonthlyMetricMapper monthlyMetricMapper;
         private final MonthlyMetricRepository monthlyMetricRepository;
-        private final ApartmentRepository apartmentRepository;
+        private final ApartmentService apartmentService;
 
         @Override
         @Transactional
@@ -50,7 +50,7 @@ public class MonthlyMetricServiceImpl implements MonthlyMetricService {
 
         @Override
         public PreviousMonthlyMetricResponse getPreviousMonthlyMetric(Long apartmentId) {
-                if (!apartmentRepository.existsById(apartmentId)) {
+                if (!apartmentService.existsById(apartmentId)) {
                         throw new NotFoundException("ApartmentID: " + apartmentId + " is not exist.");
                 }
 
