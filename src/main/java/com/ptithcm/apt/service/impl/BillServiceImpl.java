@@ -101,6 +101,17 @@ public class BillServiceImpl implements BillService {
                 BigDecimal oldElec = (lastMetric != null) ? lastMetric.getElectricityNew() : BigDecimal.ZERO;
                 BigDecimal oldWater = (lastMetric != null) ? lastMetric.getWaterNew() : BigDecimal.ZERO;
 
+                if (req.electricityService().compareTo(oldElec) < 0) {
+                        throw new RuntimeException(
+                                        "New electricity index (" + req.electricityService()
+                                                        + ") cannot be less than old index (" + oldElec + ")");
+                }
+                if (req.waterService().compareTo(oldWater) < 0) {
+                        throw new RuntimeException(
+                                        "New water index (" + req.waterService()
+                                                        + ") cannot be less than old index (" + oldWater + ")");
+                }
+
                 BigDecimal waterFee = priceMap.get("WATER")
                                 .multiply(BigDecimal.valueOf(req.waterService().longValue()).subtract(oldWater));
                 BigDecimal electricityFee = priceMap.get("ELECTRICITY")
