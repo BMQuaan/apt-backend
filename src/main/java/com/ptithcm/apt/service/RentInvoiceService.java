@@ -1,5 +1,9 @@
 package com.ptithcm.apt.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,6 +15,7 @@ import com.ptithcm.apt.dto.response.RentInvoiceResponse;
 import com.ptithcm.apt.dto.response.UpdateRentInvoiceStatusResponse;
 import com.ptithcm.apt.dto.response.UserRentInvoiceDetailResponse;
 import com.ptithcm.apt.dto.response.UserRentInvoiceListResponse;
+import com.ptithcm.apt.entity.RentInvoice;
 import com.ptithcm.apt.enums.RentStatus;
 
 public interface RentInvoiceService {
@@ -27,4 +32,13 @@ public interface RentInvoiceService {
                         RentStatus status, Pageable pageable);
 
         UserRentInvoiceDetailResponse getMyRentInvoiceDetailById(Long id);
+
+        Optional<RentInvoice> findRentInvoiceEntityById(Long id);
+
+        Optional<RentInvoice> findRentInvoiceByIdAndUserId(Long id, Long userId);
+
+        List<RentInvoice> findAllByStatusAndDueDateBefore(RentStatus status, LocalDateTime dateTime);
+
+        Page<RentInvoice> findMyRentInvoices(Long userId, Long apartmentId, Integer month, Integer year,
+                        RentStatus status, Pageable pageable);
 }

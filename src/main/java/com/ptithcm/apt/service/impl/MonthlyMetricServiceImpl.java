@@ -1,6 +1,7 @@
 package com.ptithcm.apt.service.impl;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -10,8 +11,8 @@ import com.ptithcm.apt.dto.response.MonthlyMetricResponse;
 import com.ptithcm.apt.entity.MonthlyMetric;
 import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mapper.MonthlyMetricMapper;
-import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.MonthlyMetricRepository;
+import com.ptithcm.apt.service.ApartmentService;
 import com.ptithcm.apt.service.MonthlyMetricService;
 
 import jakarta.transaction.Transactional;
@@ -19,10 +20,10 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class MonthlyMetricImpl implements MonthlyMetricService {
+public class MonthlyMetricServiceImpl implements MonthlyMetricService {
         private final MonthlyMetricMapper monthlyMetricMapper;
         private final MonthlyMetricRepository monthlyMetricRepository;
-        private final ApartmentRepository apartmentRepository;
+        private final ApartmentService apartmentService;
 
         @Override
         @Transactional
@@ -49,7 +50,7 @@ public class MonthlyMetricImpl implements MonthlyMetricService {
 
         @Override
         public PreviousMonthlyMetricResponse getPreviousMonthlyMetric(Long apartmentId) {
-                if (!apartmentRepository.existsById(apartmentId)) {
+                if (!apartmentService.existsById(apartmentId)) {
                         throw new NotFoundException("ApartmentID: " + apartmentId + " is not exist.");
                 }
 
@@ -65,6 +66,11 @@ public class MonthlyMetricImpl implements MonthlyMetricService {
                                                 .latestElectricity(BigDecimal.ZERO)
                                                 .latestWater(BigDecimal.ZERO)
                                                 .build());
+        }
+
+        @Override
+        public Optional<MonthlyMetric> findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(Long apartmentId) {
+                return monthlyMetricRepository.findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(apartmentId);
         }
 
 }

@@ -4,15 +4,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.Set;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ptithcm.apt.dto.BillFeeResult;
+import com.ptithcm.apt.dto.BillValidationResult;
 import com.ptithcm.apt.dto.request.CreateBillRequest;
 import com.ptithcm.apt.dto.request.CreateMonthlyMetricRequest;
 import com.ptithcm.apt.dto.request.CreateRentInvoiceRequest;
@@ -28,26 +28,17 @@ import com.ptithcm.apt.dto.response.UserBillListResponse;
 import com.ptithcm.apt.dto.response.UpdateBillStatusResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.entity.Bill;
-import com.ptithcm.apt.entity.MonthlyMetric;
-import com.ptithcm.apt.entity.Resident;
 import com.ptithcm.apt.entity.ResidentApartment;
-import com.ptithcm.apt.entity.ServiceConfig;
 import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.enums.BillStatus;
-import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.mapper.BillMapper;
-import com.ptithcm.apt.repository.ApartmentRepository;
 import com.ptithcm.apt.repository.BillRepository;
-import com.ptithcm.apt.repository.MonthlyMetricRepository;
-import com.ptithcm.apt.repository.ResidentApartmentRepository;
-import com.ptithcm.apt.repository.ResidentRepository;
-import com.ptithcm.apt.repository.ServiceConfigRepository;
-import com.ptithcm.apt.repository.UserRepository;
-import com.ptithcm.apt.repository.specifications.BillSpecifications;
 import com.ptithcm.apt.service.BillService;
 import com.ptithcm.apt.service.EmailService;
 import com.ptithcm.apt.service.MonthlyMetricService;
 import com.ptithcm.apt.service.RentInvoiceService;
+import com.ptithcm.apt.service.ResidentApartmentService;
+import com.ptithcm.apt.service.UserService;
 import com.ptithcm.apt.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -56,74 +47,48 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BillServiceImpl implements BillService {
 
+        // --- Core dependencies ---
         private final BillRepository billRepository;
-        private final ApartmentRepository apartmentRepository;
-        private final UserRepository userRepository;
         private final BillMapper billMapper;
+        private final UserService userService;
         private final RentInvoiceService rentInvoiceService;
-        private final ServiceConfigRepository serviceConfigRepository;
         private final MonthlyMetricService monthlyMetricService;
-        private final MonthlyMetricRepository monthlyMetricRepository;
-        private final ResidentApartmentRepository residentApartmentRepository;
+        private final ResidentApartmentService residentApartmentService;
         private final EmailService emailService;
-        private final ResidentRepository residentRepository;
+
+        // --- Delegated services ---
+        private final BillValidationService billValidationService;
+        private final BillCalculationService billCalculationService;
+        private final AdminBillQueryService adminBillQueryService;
+        private final UserBillQueryService userBillQueryService;
 
         @Override
         @Transactional
         public BillSummaryResponse createBill(CreateBillRequest req) {
-                List<ServiceConfig> configs = serviceConfigRepository.findAllCurrentConfigs();
-                Map<String, BigDecimal> priceMap = configs.stream()
-                                .collect(Collectors.toMap(ServiceConfig::getServiceCode, ServiceConfig::getUnitPrice));
+                // 1. Validate nghiệp vụ
+                BillValidationResult validated = billValidationService.validateCreateBill(req);
+                Apartment apt = validated.apartment();
+                BigDecimal oldElec = validated.oldElectricity();
+                BigDecimal oldWater = validated.oldWater();
 
-                Apartment apt = apartmentRepository.findById(req.apartmentId())
-                                .orElseThrow(() -> new RuntimeException("Apartment not found"));
-                if ("AVAILABLE".equals(apt.getStatus())) {
-                        throw new RuntimeException(
-                                        "Cannot create a bill for an AVAILABLE apartment.");
-                }
+                // 2. Tính phí dịch vụ
+                BillFeeResult fees = billCalculationService.calculateFees(
+                                apt, req.electricityService(), oldElec, req.waterService(), oldWater);
 
-                MonthlyMetric lastMetric = monthlyMetricRepository
-                                .findFirstByApartmentIdOrderByBillingYearDescBillingMonthDesc(apt.getId())
-                                .orElse(null);
-
-                if (lastMetric != null) {
-                        if (req.year() < lastMetric.getBillingYear() ||
-                                        (req.year().equals(lastMetric.getBillingYear())
-                                                        && req.month() <= lastMetric.getBillingMonth())) {
-                                throw new RuntimeException(
-                                                "Cannot create bill for a period that already has metrics or is in the past.");
-                        }
-                }
-
+                // 3. Lấy user hiện tại
                 String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                User currentUser = userService.findByUsername(userName);
 
-                BigDecimal oldElec = (lastMetric != null) ? lastMetric.getElectricityNew() : BigDecimal.ZERO;
-                BigDecimal oldWater = (lastMetric != null) ? lastMetric.getWaterNew() : BigDecimal.ZERO;
-
-                BigDecimal waterFee = priceMap.get("WATER")
-                                .multiply(BigDecimal.valueOf(req.waterService().longValue()).subtract(oldWater));
-                BigDecimal electricityFee = priceMap.get("ELECTRICITY")
-                                .multiply(BigDecimal.valueOf(req.electricityService().longValue()).subtract(oldElec));
-                BigDecimal managementFee = priceMap.get("MANAGEMENT").multiply(apt.getArea());
-                BigDecimal sanitationFee = priceMap.get("SANITATION");
-
-                BigDecimal totalAmount = waterFee
-                                .add(managementFee)
-                                .add(sanitationFee)
-                                .add(electricityFee);
-
+                // 4. Tạo và lưu Bill
                 Bill bill = Bill.builder()
                                 .apartment(apt)
                                 .billingMonth(req.month())
                                 .billingYear(req.year())
-                                .waterFee(waterFee)
-                                .managementFee(managementFee)
-                                .sanitationFee(sanitationFee)
-                                .electricityFee(electricityFee)
-                                .totalAmount(totalAmount)
-                                // .createdAt(testDate)
+                                .waterFee(fees.waterFee())
+                                .managementFee(fees.managementFee())
+                                .sanitationFee(fees.sanitationFee())
+                                .electricityFee(fees.electricityFee())
+                                .totalAmount(fees.totalAmount())
                                 .createdBy(currentUser)
                                 .status(BillStatus.UNPAID)
                                 .build();
@@ -131,11 +96,12 @@ public class BillServiceImpl implements BillService {
 
                 BillResponse billRes = billMapper.toCreateBillResponse(bill);
 
+                // 5. Tạo RentInvoice & MonthlyMetric (side effects)
                 RentInvoiceResponse rentRes = null;
                 MonthlyMetricResponse metricRes = null;
 
                 boolean shouldCreateRentInvoice = "RENTED".equals(apt.getStatus())
-                                || residentApartmentRepository.existsByApartmentIdAndRoleAndIsActiveTrue(apt.getId(),
+                                || residentApartmentService.existsByApartmentIdAndRoleAndIsActiveTrue(apt.getId(),
                                                 "TENANT");
                 if (shouldCreateRentInvoice) {
                         CreateRentInvoiceRequest rentReq = new CreateRentInvoiceRequest(
@@ -160,8 +126,9 @@ public class BillServiceImpl implements BillService {
                         bill.setDueDate(LocalDateTime.now().plusDays(15));
                 }
 
+                // 6. Gửi email thông báo
                 try {
-                        ResidentApartment headResident = residentApartmentRepository
+                        ResidentApartment headResident = residentApartmentService
                                         .findByApartmentIdAndIsHeadTrueAndIsActiveTrue(apt.getId())
                                         .orElse(null);
 
@@ -222,96 +189,60 @@ public class BillServiceImpl implements BillService {
                 bill.setPaidAt(LocalDateTime.now());
 
                 String username = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(username)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Authenticated user " + username + " not found"));
+                User currentUser = userService.findByUsername(username);
+
                 bill.setConfirmedBy(currentUser);
 
                 billRepository.save(bill);
                 return billMapper.toUpdateBillStatusResponse(bill);
         }
 
+        // --- Delegate to AdminBillQueryService ---
+
         @Override
         public Page<AdminBillListResponse> getBillsByAdmin(Integer month, Integer year, Long apartmentId,
                         BillStatus status, String roomNumber, Pageable pageable) {
-                Specification<Bill> spec = BillSpecifications.hasFilters(month, year, apartmentId, status, roomNumber);
-                Page<Bill> bills = billRepository.findAll(spec, pageable);
-                return bills.map(billMapper::toGetBillsByAdminResponse);
-        }
-
-        @Override
-        public Page<UserBillListResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
-                        Pageable pageable) {
-                String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                Resident currentResident = residentRepository.findByUser_Id(currentUser.getId())
-                                .orElseThrow(() -> new RuntimeException("Resident not found"));
-                Long currentUserId = currentUser.getId();
-                Page<Bill> bills = billRepository.findMyBills(currentUserId, apartmentId, month, year, status,
-                                pageable);
-
-                // Gom tất cả apartmentId để tránh N+1
-                Set<Long> apartmentIds = bills.stream()
-                                .map(b -> b.getApartment().getId())
-                                .collect(Collectors.toSet());
-
-                Map<Long, Resident> tenantByApartment = apartmentIds.stream()
-                                .flatMap(aptId -> residentApartmentRepository
-                                                .findActiveTenant(aptId)
-                                                .stream())
-                                .collect(Collectors.toMap(
-                                                ra -> ra.getApartment().getId(),
-                                                ResidentApartment::getResident));
-
-                return bills.map(b -> {
-                        Long aptId = b.getApartment().getId();
-                        Resident tenant = tenantByApartment.get(aptId);
-
-                        // isHead = true → đang là chủ hộ (tự ở hoặc đang thuê đứng tên)
-                        // isHead = false → OWNER không ở đây, đang cho thuê
-                        boolean isHead = residentApartmentRepository
-                                        .existsByApartmentIdAndResidentIdAndIsHeadTrueAndIsActiveTrue(
-                                                        aptId, currentResident.getId());
-
-                        return UserBillListResponse.builder()
-                                        .id(b.getId())
-                                        .apartmentName(b.getApartment().getRoomNumber())
-                                        .billingMonth(b.getBillingMonth())
-                                        .billingYear(b.getBillingYear())
-                                        .electricityFee(b.getElectricityFee())
-                                        .waterFee(b.getWaterFee())
-                                        .managementFee(b.getManagementFee())
-                                        .sanitationFee(b.getSanitationFee())
-                                        .totalAmount(b.getTotalAmount())
-                                        .status(b.getStatus())
-                                        .viewerRole(isHead ? "HEAD" : "OWNER")
-                                        .tenantName(!isHead && tenant != null
-                                                        ? tenant.getFullName()
-                                                        : null)
-                                        .dueDate(b.getDueDate())
-                                        .build();
-                });
-        }
-
-        @Override
-        public UserBillDetailResponse getMyBillDetailById(Long id) {
-                String userName = SecurityUtils.getCurrentUsername();
-                User currentUser = userRepository.findByUsername(userName)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-                Long currentUserId = currentUser.getId();
-                Bill bill = billRepository.findByIdAndUserId(id, currentUserId)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Bill not found or you don't have permission to view it"));
-
-                return billMapper.toGetMyBillDetailByIdResponse(bill);
+                return adminBillQueryService.getBillsByAdmin(month, year, apartmentId, status, roomNumber, pageable);
         }
 
         @Override
         public AdminBillDetailResponse getBillDetailByAdmin(Long id) {
-                Bill bill = billRepository.findById(id).orElseThrow(() -> new NotFoundException("Bill not found"));
-                return billMapper.toGetBillDetailByAdminResponse(bill);
+                return adminBillQueryService.getBillDetailByAdmin(id);
+        }
+
+        // --- Delegate to UserBillQueryService ---
+
+        @Override
+        public Page<UserBillListResponse> getMyBills(Integer month, Integer year, Long apartmentId, BillStatus status,
+                        Pageable pageable) {
+                return userBillQueryService.getMyBills(month, year, apartmentId, status, pageable);
+        }
+
+        @Override
+        public UserBillDetailResponse getMyBillDetailById(Long id) {
+                return userBillQueryService.getMyBillDetailById(id);
+        }
+
+        // --- Repository delegates (giữ lại cho scheduler và các service khác) ---
+
+        @Override
+        public Optional<Bill> findBillEntityById(Long id) {
+                return billRepository.findById(id);
+        }
+
+        @Override
+        public Optional<Bill> findBillByIdAndUserId(Long billId, Long userId) {
+                return billRepository.findByIdAndUserId(billId, userId);
+        }
+
+        @Override
+        public List<Bill> findAllByStatusAndDueDateBefore(BillStatus status, LocalDateTime dateTime) {
+                return billRepository.findAllByStatusAndDueDateBefore(status, dateTime);
+        }
+
+        @Override
+        public boolean isApartmentHasStatus(Long apartmentId, BillStatus status) {
+                return billRepository.existsByApartmentIdAndStatus(apartmentId, status);
         }
 
 }

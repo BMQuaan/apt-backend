@@ -335,4 +335,9 @@ public class ResidentServiceImpl implements ResidentService {
                                 .orElseThrow(() -> new NotFoundException(
                                                 "Tài khoản chưa được liên kết với hồ sơ cư dân nào"));
         }
+
+        @Override
+        public Optional<Resident> findById(Long userId) {
+                return residentRepository.findById(userId);
+        }
 }
