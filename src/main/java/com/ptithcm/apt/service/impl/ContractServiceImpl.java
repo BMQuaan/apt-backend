@@ -1,9 +1,9 @@
 package com.ptithcm.apt.service.impl;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +43,14 @@ public class ContractServiceImpl implements ContractService {
     @Override
     @Transactional
     public ResidentResponse createContract(ContractRequest request) {
+
+        if (request.getDob() == null) {
+            throw new RuntimeException("Ngày sinh không được để trống!");
+        }
+        int age = Period.between(request.getDob(), LocalDate.now()).getYears();
+        if (age < 18) {
+            throw new RuntimeException("Người đại diện lập hợp đồng phải từ đủ 18 tuổi trở lên!");
+        }
 
         if (!"TENANT".equals(request.getRole()) && !"OWNER".equals(request.getRole())) {
             throw new RuntimeException("Vai trò khi lập hợp đồng chỉ có thể là TENANT hoặc OWNER");
