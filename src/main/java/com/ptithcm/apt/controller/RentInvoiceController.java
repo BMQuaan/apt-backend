@@ -30,13 +30,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/rent-invoices")
 @RequiredArgsConstructor
 public class RentInvoiceController {
     private final RentInvoiceService rentInvoiceService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/rent-invoices")
+    @GetMapping()
     public ResponseEntity<ApiResponse<PageResponse<AdminRentInvoiceListResponse>>> getRentInvoiceListByAdmin(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
@@ -50,7 +50,7 @@ public class RentInvoiceController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/rent-invoices/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AdminRentInvoiceDetailResponse>> getRentInvoiceDetailByAdmin(
             @PathVariable Long id) {
         AdminRentInvoiceDetailResponse res = rentInvoiceService.getRentInvoiceDetailByAdmin(id);
@@ -58,7 +58,7 @@ public class RentInvoiceController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/admin/rent-invoices/{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<UpdateRentInvoiceStatusResponse>> updateRentInvoiceStatus(
             @PathVariable Long id,
             @RequestBody UpdateRentInvoiceStatusRequest req) {
@@ -66,7 +66,7 @@ public class RentInvoiceController {
         return ResponseEntity.ok(ApiResponse.success(res, "Cập nhật trạng thái hóa đơn thuê nhà thành công"));
     }
 
-    @GetMapping("/me/rent-invoices")
+    @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<UserRentInvoiceListResponse>>> getMyRentInvoices(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
@@ -78,7 +78,7 @@ public class RentInvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(res), "Lấy danh sách hóa đơn thuê nhà của tôi thành công"));
     }
 
-    @GetMapping("/me/rent-invoices/{id}")
+    @GetMapping("/me/{id}")
     public ResponseEntity<ApiResponse<UserRentInvoiceDetailResponse>> getMyRentInvoiceDetailById(
             @PathVariable Long id) {
         UserRentInvoiceDetailResponse res = rentInvoiceService.getMyRentInvoiceDetailById(id);

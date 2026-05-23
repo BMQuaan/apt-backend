@@ -15,13 +15,13 @@ import com.ptithcm.apt.service.MonthlyMetricService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/monthly-metrics")
 @RequiredArgsConstructor
 public class MonthlyMetricController {
     private final MonthlyMetricService monthlyMetricService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/monthly-metrics")
+    @GetMapping()
     public ResponseEntity<ApiResponse<PreviousMonthlyMetricResponse>> getPreviousMonthlyMetric(
             @RequestParam("apartmentId") Long apartmentId) {
         PreviousMonthlyMetricResponse res = monthlyMetricService.getPreviousMonthlyMetric(apartmentId);

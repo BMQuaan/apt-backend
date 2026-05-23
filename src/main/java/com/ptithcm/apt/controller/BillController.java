@@ -38,13 +38,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.ptithcm.apt.dto.response.PageResponse;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/bills")
 @RequiredArgsConstructor
 public class BillController {
     private final BillService billService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin/bills")
+    @PostMapping()
     public ResponseEntity<ApiResponse<BillSummaryResponse>> createBill(
             @Valid @RequestBody CreateBillRequest req) {
         BillSummaryResponse res = billService.createBill(req);
@@ -52,7 +52,7 @@ public class BillController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/admin/bills/{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<UpdateBillStatusResponse>> updateBillStatus(@PathVariable Long id,
             @RequestBody UpdateBillStatusRequest req) {
         UpdateBillStatusResponse res = billService.updateBillStatus(id, req);
@@ -60,7 +60,7 @@ public class BillController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/bills")
+    @GetMapping()
     public ResponseEntity<ApiResponse<PageResponse<AdminBillListResponse>>> getBillsByAdmin(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
@@ -74,13 +74,13 @@ public class BillController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/bills/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AdminBillDetailResponse>> getBillDetailByAdmin(@PathVariable Long id) {
         AdminBillDetailResponse res = billService.getBillDetailByAdmin(id);
         return ResponseEntity.ok(ApiResponse.success(res, "Lấy thông tin chi tiết hóa đơn thành công"));
     }
 
-    @GetMapping("/me/bills")
+    @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<UserBillListResponse>>> getMyBills(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
@@ -91,7 +91,7 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Lấy danh sách hóa đơn của tôi thành công"));
     }
 
-    @GetMapping("/me/bills/{id}")
+    @GetMapping("/me/{id}")
     public ResponseEntity<ApiResponse<UserBillDetailResponse>> getMyBillDetailById(
             @PathVariable Long id) {
         UserBillDetailResponse res = billService.getMyBillDetailById(id);
