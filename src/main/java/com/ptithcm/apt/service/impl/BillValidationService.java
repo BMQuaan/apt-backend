@@ -31,11 +31,11 @@ public class BillValidationService {
          */
         public BillValidationResult validateCreateBill(CreateBillRequest req) {
                 Apartment apt = apartmentService.findById(req.apartmentId())
-                                .orElseThrow(() -> new NotFoundException("Apartment not found"));
+                                .orElseThrow(() -> new NotFoundException("Không tìm thấy căn hộ"));
 
                 if ("AVAILABLE".equals(apt.getStatus())) {
                         throw new RuntimeException(
-                                        "Cannot create a bill for an AVAILABLE apartment.");
+                                        "Không thể tạo hóa đơn cho căn hộ đang ở trạng thái TRỐNG (AVAILABLE).");
                 }
 
                 MonthlyMetric lastMetric = monthlyMetricService
@@ -47,7 +47,7 @@ public class BillValidationService {
                                         (req.year().equals(lastMetric.getBillingYear())
                                                         && req.month() <= lastMetric.getBillingMonth())) {
                                 throw new RuntimeException(
-                                                "Cannot create bill for a period that already has metrics or is in the past.");
+                                                "Không thể tạo hóa đơn cho khoảng thời gian đã có chỉ số hoặc trong quá khứ.");
                         }
                 }
 
@@ -56,13 +56,13 @@ public class BillValidationService {
 
                 if (req.electricityService().compareTo(oldElec) < 0) {
                         throw new RuntimeException(
-                                        "New electricity index (" + req.electricityService()
-                                                        + ") cannot be less than old index (" + oldElec + ")");
+                                        "Chỉ số điện mới (" + req.electricityService()
+                                                        + ") không được nhỏ hơn chỉ số cũ (" + oldElec + ")");
                 }
                 if (req.waterService().compareTo(oldWater) < 0) {
                         throw new RuntimeException(
-                                        "New water index (" + req.waterService()
-                                                        + ") cannot be less than old index (" + oldWater + ")");
+                                        "Chỉ số nước mới (" + req.waterService()
+                                                        + ") không được nhỏ hơn chỉ số cũ (" + oldWater + ")");
                 }
 
                 return new BillValidationResult(apt, oldElec, oldWater);

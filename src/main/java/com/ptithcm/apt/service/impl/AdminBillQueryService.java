@@ -37,7 +37,7 @@ public class AdminBillQueryService {
          * Lấy chi tiết bill cho Admin.
          */
         public AdminBillDetailResponse getBillDetailByAdmin(Long id) {
-                Bill bill = billRepository.findById(id).orElseThrow(() -> new NotFoundException("Bill not found"));
+                Bill bill = billRepository.findById(id).orElseThrow(() -> new NotFoundException("Không tìm thấy hóa đơn"));
                 return billMapper.toGetBillDetailByAdminResponse(bill);
         }
 }

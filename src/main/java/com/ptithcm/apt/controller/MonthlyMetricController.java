@@ -25,7 +25,7 @@ public class MonthlyMetricController {
     public ResponseEntity<ApiResponse<PreviousMonthlyMetricResponse>> getPreviousMonthlyMetric(
             @RequestParam("apartmentId") Long apartmentId) {
         PreviousMonthlyMetricResponse res = monthlyMetricService.getPreviousMonthlyMetric(apartmentId);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully get latest monthly metric"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Lấy chỉ số điện nước tháng trước thành công"));
     }
 
 }

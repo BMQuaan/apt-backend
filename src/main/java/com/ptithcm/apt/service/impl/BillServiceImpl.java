@@ -168,21 +168,21 @@ public class BillServiceImpl implements BillService {
         @Override
         public UpdateBillStatusResponse updateBillStatus(Long billId, UpdateBillStatusRequest req) {
                 Bill bill = billRepository.findById(billId)
-                                .orElseThrow(() -> new RuntimeException("Bill not found"));
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
                 BillStatus currentStatus = bill.getStatus();
                 BillStatus newStatus = req.status();
 
                 if (newStatus != BillStatus.PAID) {
-                        throw new RuntimeException("Only PAID status transition is supported");
+                        throw new RuntimeException("Chỉ hỗ trợ chuyển trạng thái sang ĐÃ THANH TOÁN");
                 }
 
                 if (currentStatus == BillStatus.PAID) {
-                        throw new RuntimeException("Bill is already PAID");
+                        throw new RuntimeException("Hóa đơn đã được thanh toán");
                 }
 
                 if (currentStatus != BillStatus.UNPAID && currentStatus != BillStatus.LATE) {
-                        throw new RuntimeException("Cannot pay bill with current status: " + currentStatus);
+                        throw new RuntimeException("Không thể thanh toán hóa đơn với trạng thái hiện tại: " + currentStatus);
                 }
 
                 bill.setStatus(BillStatus.PAID);

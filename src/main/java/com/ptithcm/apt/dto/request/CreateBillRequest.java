@@ -8,9 +8,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record CreateBillRequest(
-                @NotNull Long apartmentId,
-                @Min(value = 1, message = "Month must be at least 1") @Max(value = 12, message = "Month must be at most 12") @NotNull Integer month,
-                @NotNull @Positive Integer year,
-                @NotNull @Positive BigDecimal electricityService,
-                @NotNull @Positive BigDecimal waterService) {
+                @NotNull(message = "ID căn hộ không được để trống") Long apartmentId,
+                @Min(value = 1, message = "Tháng phải từ 1 đến 12") @Max(value = 12, message = "Tháng phải từ 1 đến 12") @NotNull(message = "Tháng không được để trống") Integer month,
+                @NotNull(message = "Năm không được để trống") @Positive(message = "Năm phải là số dương") Integer year,
+                @NotNull(message = "Chỉ số điện mới không được để trống") @Positive(message = "Chỉ số điện mới phải là số dương") BigDecimal electricityService,
+                @NotNull(message = "Chỉ số nước mới không được để trống") @Positive(message = "Chỉ số nước mới phải là số dương") BigDecimal waterService) {
 }

@@ -54,20 +54,20 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         public RentInvoiceResponse createMonthlyRentInvoice(CreateRentInvoiceRequest req) {
                 ResidentApartment contract = residentApartmentService.findActiveTenant(req.apartmentId())
                                 .orElseThrow(() -> new RuntimeException(
-                                                "Apartment is marked as RENTED but no active tenant contract was found!"));
+                                                "Căn hộ được đánh dấu là ĐANG THUÊ nhưng không tìm thấy hợp đồng thuê nào còn hiệu lực!"));
 
                 LocalDate now = LocalDate.now();
                 LocalDate billingDate = LocalDate.of(req.year(), req.month(), 1);
 
                 if (contract.getContractEnd() != null && contract.getContractEnd().isBefore(now)) {
-                        throw new RuntimeException("Cannot generate invoice: The contract for resident ["
-                                        + contract.getResident().getFullName() + "] expired on "
+                        throw new RuntimeException("Không thể tạo hóa đơn: Hợp đồng của cư dân ["
+                                        + contract.getResident().getFullName() + "] đã hết hạn vào ngày "
                                         + contract.getContractEnd());
                 }
 
                 if (contract.getContractEnd() != null && contract.getContractEnd().isBefore(billingDate)) {
                         throw new RuntimeException(
-                                        "The contract will expire before the beginning of this billing period ("
+                                        "Hợp đồng sẽ hết hạn trước khi bắt đầu kỳ thanh toán này ("
                                                         + req.month()
                                                         + "/" + req.year() + ").");
                 }
@@ -105,28 +105,28 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         @Override
         public AdminRentInvoiceDetailResponse getRentInvoiceDetailByAdmin(Long id) {
                 RentInvoice rentInvoice = rentInvoiceRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Rent invoice not found"));
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn thuê nhà"));
                 return rentInvoiceMapper.toGetRentInvoiceDetailResponse(rentInvoice);
         }
 
         @Override
         public UpdateRentInvoiceStatusResponse updateRentInvoiceStatus(Long id, UpdateRentInvoiceStatusRequest req) {
                 RentInvoice rentInvoice = rentInvoiceRepository.findById(id)
-                                .orElseThrow(() -> new NotFoundException("Rent invoice not found"));
+                                .orElseThrow(() -> new NotFoundException("Không tìm thấy hóa đơn thuê nhà"));
 
                 RentStatus currentStatus = rentInvoice.getStatus();
                 RentStatus newStatus = req.status();
 
                 if (newStatus != RentStatus.PAID) {
-                        throw new RuntimeException("API only supports updating status to PAID");
+                        throw new RuntimeException("Hệ thống chỉ hỗ trợ cập nhật trạng thái sang ĐÃ THANH TOÁN");
                 }
 
                 if (currentStatus == RentStatus.PAID) {
-                        throw new RuntimeException("Invoice is already PAID");
+                        throw new RuntimeException("Hóa đơn đã được thanh toán");
                 }
 
                 if (currentStatus != RentStatus.UNPAID && currentStatus != RentStatus.LATE) {
-                        throw new RuntimeException("Cannot pay invoice with current status: " + currentStatus);
+                        throw new RuntimeException("Không thể thanh toán hóa đơn với trạng thái hiện tại: " + currentStatus);
                 }
 
                 rentInvoice.setStatus(RentStatus.PAID);
@@ -188,7 +188,7 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
                 Long currentUserId = currentUser.getId();
                 RentInvoice rentInvoice = rentInvoiceRepository.findByIdAndUserId(id, currentUserId)
                                 .orElseThrow(() -> new RuntimeException(
-                                                "Rent invoice not found or you don't have permission to view it"));
+                                                "Không tìm thấy hóa đơn thuê nhà hoặc bạn không có quyền xem hóa đơn này"));
                 return rentInvoiceMapper.toMyRentInvoiceDetailResponse(rentInvoice);
         }
 

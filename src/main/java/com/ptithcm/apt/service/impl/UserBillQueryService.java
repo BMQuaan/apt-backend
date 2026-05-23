@@ -101,7 +101,7 @@ public class UserBillQueryService {
                 Long currentUserId = currentUser.getId();
                 Bill bill = billRepository.findByIdAndUserId(id, currentUserId)
                                 .orElseThrow(() -> new RuntimeException(
-                                                "Bill not found or you don't have permission to view it"));
+                                                "Không tìm thấy hóa đơn hoặc bạn không có quyền xem hóa đơn này"));
 
                 return billMapper.toGetMyBillDetailByIdResponse(bill);
         }

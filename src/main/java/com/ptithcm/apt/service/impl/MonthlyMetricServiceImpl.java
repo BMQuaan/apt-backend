@@ -30,14 +30,14 @@ public class MonthlyMetricServiceImpl implements MonthlyMetricService {
         public MonthlyMetricResponse createMonthlyMetric(CreateMonthlyMetricRequest req) {
 
                 if (req.electricityNew().compareTo(req.electricityOld()) < 0) {
-                        throw new RuntimeException("The new electricity reading (" + req.electricityNew()
-                                        + ") cannot be lower than the previous reading (" + req.electricityOld()
+                        throw new RuntimeException("Chỉ số điện mới (" + req.electricityNew()
+                                        + ") không được thấp hơn chỉ số cũ (" + req.electricityOld()
                                         + ").");
                 }
 
                 if (req.waterNew().compareTo(req.waterOld()) < 0) {
-                        throw new RuntimeException("The new water reading (" + req.waterNew()
-                                        + ") cannot be lower than the previous reading (" + req.waterOld() + ").");
+                        throw new RuntimeException("Chỉ số nước mới (" + req.waterNew()
+                                        + ") không được thấp hơn chỉ số cũ (" + req.waterOld() + ").");
                 }
 
                 MonthlyMetric currentMonthlyMetric = monthlyMetricMapper.toEntity(req.apartment(), req.month(),
@@ -51,7 +51,7 @@ public class MonthlyMetricServiceImpl implements MonthlyMetricService {
         @Override
         public PreviousMonthlyMetricResponse getPreviousMonthlyMetric(Long apartmentId) {
                 if (!apartmentService.existsById(apartmentId)) {
-                        throw new NotFoundException("ApartmentID: " + apartmentId + " is not exist.");
+                        throw new NotFoundException("Mã căn hộ: " + apartmentId + " không tồn tại.");
                 }
 
                 return monthlyMetricRepository

@@ -10,12 +10,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record CreateMonthlyMetricRequest(
-                @NotNull Apartment apartment,
-                @Min(value = 1, message = "Month must be at least 1") @Max(value = 12, message = "Month must be at most 12") @NotNull Integer month,
-                @NotNull @Positive Integer year,
-                @NotNull @Positive BigDecimal electricityNew,
-                @NotNull @Positive BigDecimal waterNew,
-                @NotNull @Positive BigDecimal electricityOld,
-                @NotNull @Positive BigDecimal waterOld) {
+                @NotNull(message = "Căn hộ không được để trống") Apartment apartment,
+                @Min(value = 1, message = "Tháng phải từ 1 đến 12") @Max(value = 12, message = "Tháng phải từ 1 đến 12") @NotNull(message = "Tháng không được để trống") Integer month,
+                @NotNull(message = "Năm không được để trống") @Positive(message = "Năm phải là số dương") Integer year,
+                @NotNull(message = "Chỉ số điện mới không được để trống") @Positive(message = "Chỉ số điện mới phải là số dương") BigDecimal electricityNew,
+                @NotNull(message = "Chỉ số nước mới không được để trống") @Positive(message = "Chỉ số nước mới phải là số dương") BigDecimal waterNew,
+                @NotNull(message = "Chỉ số điện cũ không được để trống") @Positive(message = "Chỉ số điện cũ phải là số dương") BigDecimal electricityOld,
+                @NotNull(message = "Chỉ số nước cũ không được để trống") @Positive(message = "Chỉ số nước cũ phải là số dương") BigDecimal waterOld) {
 
 }

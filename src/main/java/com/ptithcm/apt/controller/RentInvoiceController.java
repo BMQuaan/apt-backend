@@ -46,7 +46,7 @@ public class RentInvoiceController {
         Page<AdminRentInvoiceListResponse> rentinvoices = rentInvoiceService.getRentInvoiceListByAdmin(month, year,
                 apartmentId, status, pageable);
         return ResponseEntity
-                .ok(ApiResponse.success(PageResponse.from(rentinvoices), "Successfully fetched rent invoices"));
+                .ok(ApiResponse.success(PageResponse.from(rentinvoices), "Lấy danh sách hóa đơn thuê nhà thành công"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -54,7 +54,7 @@ public class RentInvoiceController {
     public ResponseEntity<ApiResponse<AdminRentInvoiceDetailResponse>> getRentInvoiceDetailByAdmin(
             @PathVariable Long id) {
         AdminRentInvoiceDetailResponse res = rentInvoiceService.getRentInvoiceDetailByAdmin(id);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched rent invoice detail"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Lấy chi tiết hóa đơn thuê nhà thành công"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -63,7 +63,7 @@ public class RentInvoiceController {
             @PathVariable Long id,
             @RequestBody UpdateRentInvoiceStatusRequest req) {
         UpdateRentInvoiceStatusResponse res = rentInvoiceService.updateRentInvoiceStatus(id, req);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully updated rent invoice status"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Cập nhật trạng thái hóa đơn thuê nhà thành công"));
     }
 
     @GetMapping("/me/rent-invoices")
@@ -75,14 +75,14 @@ public class RentInvoiceController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<UserRentInvoiceListResponse> res = rentInvoiceService.getMyRentInvoices(month, year, apartmentId, status,
                 pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(res), "Successfully fetched my rent invoices"));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(res), "Lấy danh sách hóa đơn thuê nhà của tôi thành công"));
     }
 
     @GetMapping("/me/rent-invoices/{id}")
     public ResponseEntity<ApiResponse<UserRentInvoiceDetailResponse>> getMyRentInvoiceDetailById(
             @PathVariable Long id) {
         UserRentInvoiceDetailResponse res = rentInvoiceService.getMyRentInvoiceDetailById(id);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched rent invoice"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Lấy thông tin chi tiết hóa đơn thuê nhà thành công"));
     }
 
 }

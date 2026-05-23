@@ -48,7 +48,7 @@ public class BillController {
     public ResponseEntity<ApiResponse<BillSummaryResponse>> createBill(
             @Valid @RequestBody CreateBillRequest req) {
         BillSummaryResponse res = billService.createBill(req);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully created bill"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Tạo hóa đơn thành công"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -56,7 +56,7 @@ public class BillController {
     public ResponseEntity<ApiResponse<UpdateBillStatusResponse>> updateBillStatus(@PathVariable Long id,
             @RequestBody UpdateBillStatusRequest req) {
         UpdateBillStatusResponse res = billService.updateBillStatus(id, req);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully updated bill status"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Cập nhật trạng thái hóa đơn thành công"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -70,14 +70,14 @@ public class BillController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<AdminBillListResponse> bills = billService.getBillsByAdmin(month, year, apartmentId, status, roomNumber,
                 pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched bills"));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Lấy danh sách hóa đơn thành công"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/bills/{id}")
     public ResponseEntity<ApiResponse<AdminBillDetailResponse>> getBillDetailByAdmin(@PathVariable Long id) {
         AdminBillDetailResponse res = billService.getBillDetailByAdmin(id);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched bill"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Lấy thông tin chi tiết hóa đơn thành công"));
     }
 
     @GetMapping("/me/bills")
@@ -88,14 +88,14 @@ public class BillController {
             @RequestParam(required = false) BillStatus status,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<UserBillListResponse> bills = billService.getMyBills(month, year, apartmentId, status, pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Successfully fetched my bills"));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Lấy danh sách hóa đơn của tôi thành công"));
     }
 
     @GetMapping("/me/bills/{id}")
     public ResponseEntity<ApiResponse<UserBillDetailResponse>> getMyBillDetailById(
             @PathVariable Long id) {
         UserBillDetailResponse res = billService.getMyBillDetailById(id);
-        return ResponseEntity.ok(ApiResponse.success(res, "Successfully fetched bill"));
+        return ResponseEntity.ok(ApiResponse.success(res, "Lấy thông tin chi tiết hóa đơn thành công"));
     }
 
 }
