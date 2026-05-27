@@ -22,7 +22,7 @@ public interface RentInvoiceService {
         RentInvoiceResponse createMonthlyRentInvoice(CreateRentInvoiceRequest req);
 
         Page<AdminRentInvoiceListResponse> getRentInvoiceListByAdmin(Integer month, Integer year, Long apartmentId,
-                        RentStatus status, Pageable pageable);
+                        RentStatus status, String roomNumber, Pageable pageable);
 
         AdminRentInvoiceDetailResponse getRentInvoiceDetailByAdmin(Long id);
 

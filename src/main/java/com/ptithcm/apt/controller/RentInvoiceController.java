@@ -42,9 +42,10 @@ public class RentInvoiceController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Long apartmentId,
             @RequestParam(required = false) RentStatus status,
+            @RequestParam(required = false) String roomNumber,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<AdminRentInvoiceListResponse> rentinvoices = rentInvoiceService.getRentInvoiceListByAdmin(month, year,
-                apartmentId, status, pageable);
+                apartmentId, status, roomNumber, pageable);
         return ResponseEntity
                 .ok(ApiResponse.success(PageResponse.from(rentinvoices), "Lấy danh sách hóa đơn thuê nhà thành công"));
     }

@@ -94,9 +94,9 @@ public class RentInvoiceServiceImpl implements RentInvoiceService {
         @Override
         public Page<AdminRentInvoiceListResponse> getRentInvoiceListByAdmin(Integer month, Integer year,
                         Long apartmentId,
-                        RentStatus status, Pageable pageable) {
+                        RentStatus status, String roomNumber,Pageable pageable) {
                 Specification<RentInvoice> spec = RentInvoiceSpecifications.hasFilters(month, year, apartmentId,
-                                status);
+                                status, roomNumber);
                 Page<RentInvoice> rentInvoices = rentInvoiceRepository.findAll(spec, pageable);
 
                 return rentInvoices.map(rentInvoiceMapper::toGetRentInvoiceListResponse);
