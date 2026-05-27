@@ -28,7 +28,7 @@ public class ResidentController {
 
     private final ResidentService residentService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @PostMapping("/apartments/{roomNumber}/members")
     public ResponseEntity<ResidentResponse> addMemberToApartment(
             @PathVariable String roomNumber,
@@ -37,8 +37,7 @@ public class ResidentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @GetMapping
     public ResponseEntity<Page<ResidentListResponse>> getResidents(
             @RequestParam(required = false) String keyword,
@@ -48,7 +47,7 @@ public class ResidentController {
         return ResponseEntity.ok(residentService.getActiveResidents(keyword, pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @PutMapping("/{residentId}/apartments/{apartmentId}/move-out")
     public ResponseEntity<String> moveOut(
             @PathVariable Long residentId,
@@ -57,7 +56,7 @@ public class ResidentController {
         return ResponseEntity.ok("Đã xử lý trả phòng thành công!");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @PutMapping("/{id}")
     public ResponseEntity<ResidentDetailResponse> updateResident(
             @PathVariable("id") Long residentId,
@@ -66,20 +65,20 @@ public class ResidentController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'STAFF')")
     @GetMapping("/apartments/{apartmentId}")
     public ResponseEntity<List<ResidentListResponse>> getResidentsInApartment(@PathVariable Long apartmentId) {
         List<ResidentListResponse> responses = residentService.getResidentsByApartment(apartmentId);
         return ResponseEntity.ok(responses);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @GetMapping("/{id}")
     public ResponseEntity<ResidentDetailResponse> getResidentDetail(@PathVariable Long id) {
         return ResponseEntity.ok(residentService.getResidentDetailById(id));
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'STAFF')")
     @GetMapping("/me")
     public ResponseEntity<List<MyApartmentResponse>> getMyApartments() {
         List<MyApartmentResponse> myRooms = residentService.getMyApartments();

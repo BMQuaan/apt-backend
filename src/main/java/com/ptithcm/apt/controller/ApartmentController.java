@@ -30,27 +30,27 @@ public class ApartmentController {
 
     private final ApartmentService apartmentService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @GetMapping
     public ResponseEntity<Page<ApartmentResponse>> getAllApartments(@RequestParam(defaultValue = "0") int page) {
         Page<ApartmentResponse> responses = apartmentService.getAllApartments(page);
         return ResponseEntity.ok(responses);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @PostMapping
     public ResponseEntity<ApartmentResponse> createApartment(@Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.createApartment(request));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @PutMapping("/{id}")
     public ResponseEntity<ApartmentResponse> updateApartment(@PathVariable Long id,
             @Valid @RequestBody ApartmentRequest request) {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @GetMapping("/search")
     public ResponseEntity<List<ApartmentResponse>> searchApartmentsByRoomNumber(@RequestParam String keyword) {
         return ResponseEntity.ok(apartmentService.searchApartmentsByRoomNumber(keyword));

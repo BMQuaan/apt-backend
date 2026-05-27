@@ -22,14 +22,14 @@ public class ContractController {
 
     private final ContractService contractService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @PostMapping
     public ResponseEntity<ResidentResponse> createContract(@Valid @RequestBody ContractRequest request) {
         ResidentResponse response = contractService.createContract(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @GetMapping
     public ResponseEntity<Page<ContractResponse>> getAllContracts(
             @RequestParam(required = false) String keyword,
@@ -41,7 +41,7 @@ public class ContractController {
         return ResponseEntity.ok(contractService.getAllContracts(keyword, role, pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     @GetMapping("/{id}")
     public ResponseEntity<ContractResponse> getContractDetail(@PathVariable("id") Long contractId) {
         return ResponseEntity.ok(contractService.getContractDetail(contractId));
