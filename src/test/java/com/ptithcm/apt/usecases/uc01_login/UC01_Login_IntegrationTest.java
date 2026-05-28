@@ -33,7 +33,7 @@ public class UC01_Login_IntegrationTest {
     @DisplayName("TC-09: Đăng nhập thành công với tài khoản ĐÚNG trong Database")
     void testLogin_Success_RealDatabase() throws Exception {
         // tài khoản CÓ THẬT trong DB
-        LoginRequest request = new LoginRequest("admin@gmail.com", "admin123");
+        LoginRequest request = new LoginRequest("admin@gmail.com", "123456");
 
         // Gửi một HTTP POST request đến API login
         mockMvc.perform(post("/api/v1/auth/login")

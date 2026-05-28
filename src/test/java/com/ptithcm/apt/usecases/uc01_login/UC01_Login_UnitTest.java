@@ -145,7 +145,7 @@ public class UC01_Login_UnitTest {
 
             // Giả lập hành vi: Ép AuthenticationManager ném ra Exception khi được gọi
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                    .thenThrow(new BadCredentialsException("Sai thông tin đăng nhập"));
+                    .thenThrow(new BadCredentialsException("Tên đăng nhập hoặc mật khẩu không chính xác"));
 
             // Đảm bảo hàm login sẽ bị ngắt và ném ra đúng Exception mong đợi
             assertThrows(BadCredentialsException.class, () -> authService.login(request, httpRequest));

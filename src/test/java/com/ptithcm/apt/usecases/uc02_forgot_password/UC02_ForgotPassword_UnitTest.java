@@ -192,7 +192,7 @@ public class UC02_ForgotPassword_UnitTest {
             when(otpService.findTopActiveByEmail("user@gmail.com")).thenReturn(Optional.empty());
 
             RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.verifyOtp(request));
-            assertTrue(exception.getMessage().contains("Không tìm thấy yêu cầu"));
+            assertTrue(exception.getMessage().contains("Không tìm thấy yêu cầu hoặc OTP đã bị hủy."));
         }
 
         @Test
@@ -222,7 +222,7 @@ public class UC02_ForgotPassword_UnitTest {
             when(passwordEncoder.matches("wrong_code", mockOtp.getOtpHash())).thenReturn(false);
 
             RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.verifyOtp(request));
-            assertTrue(exception.getMessage().contains("Nhập sai quá 5 lần"));
+            assertTrue(exception.getMessage().contains("Nhập sai quá 5 lần. Yêu cầu khôi phục mật khẩu đã bị hủy."));
             // Phải bị hủy sau khi sai lần 5
             assertTrue(mockOtp.getIsRevoked());
         }
