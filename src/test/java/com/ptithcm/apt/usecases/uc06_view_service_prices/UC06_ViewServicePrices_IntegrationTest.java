@@ -36,7 +36,7 @@ public class UC06_ViewServicePrices_IntegrationTest {
 
     @Test
     @WithMockUser(username = "resident@gmail.com", roles = "USER")
-    @DisplayName("TC-03: Bỏ trống tham số date (HTTP 400)")
+    @DisplayName("TC-03: Bỏ trống tham số date (HTTP 500)")
     void testGetPrices_MissingDateParam() throws Exception {
         // Cố tình không đính kèm .param("date", ...)
         mockMvc.perform(get("/api/v1/service-configs/active"))
