@@ -1,0 +1,14 @@
+<configuration>
+    <!-- Ẩn các log INFO không cần thiết khi chạy test -->
+    <logger name="org.hibernate.validator" level="WARN" />
+    
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
