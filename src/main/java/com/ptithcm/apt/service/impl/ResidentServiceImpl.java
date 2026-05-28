@@ -246,9 +246,9 @@ public class ResidentServiceImpl implements ResidentService {
                                 .existsByResidentIdAndIsActiveTrue(resident.getId());
                 if (!stillHasOtherApartment) {
                         User user = resident.getUser();
-                        if (user != null && user.getIsActive()) {
-                                user.setIsActive(false);
-                                userRepository.save(user);
+                        if (user != null) {
+                                // user.setIsActive(false);
+                                userRepository.delete(user);
                         }
                 }
         }
