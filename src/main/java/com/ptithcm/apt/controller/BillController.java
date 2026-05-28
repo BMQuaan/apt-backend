@@ -43,7 +43,7 @@ import com.ptithcm.apt.dto.response.PageResponse;
 public class BillController {
     private final BillService billService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT')")
     @PostMapping()
     public ResponseEntity<ApiResponse<BillSummaryResponse>> createBill(
             @Valid @RequestBody CreateBillRequest req) {
@@ -51,7 +51,7 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.success(res, "Tạo hóa đơn thành công"));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<UpdateBillStatusResponse>> updateBillStatus(@PathVariable Long id,
             @RequestBody UpdateBillStatusRequest req) {
@@ -59,7 +59,7 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.success(res, "Cập nhật trạng thái hóa đơn thành công"));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT')")
     @GetMapping()
     public ResponseEntity<ApiResponse<PageResponse<AdminBillListResponse>>> getBillsByAdmin(
             @RequestParam(required = false) Integer month,
@@ -73,13 +73,14 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Lấy danh sách hóa đơn thành công"));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AdminBillDetailResponse>> getBillDetailByAdmin(@PathVariable Long id) {
         AdminBillDetailResponse res = billService.getBillDetailByAdmin(id);
         return ResponseEntity.ok(ApiResponse.success(res, "Lấy thông tin chi tiết hóa đơn thành công"));
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN','ACCOUNTANT')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<UserBillListResponse>>> getMyBills(
             @RequestParam(required = false) Integer month,
@@ -88,9 +89,11 @@ public class BillController {
             @RequestParam(required = false) BillStatus status,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
         Page<UserBillListResponse> bills = billService.getMyBills(month, year, apartmentId, status, pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(bills), "Lấy danh sách hóa đơn của tôi thành công"));
+        return ResponseEntity
+                .ok(ApiResponse.success(PageResponse.from(bills), "Lấy danh sách hóa đơn của tôi thành công"));
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN','ACCOUNTANT')")
     @GetMapping("/me/{id}")
     public ResponseEntity<ApiResponse<UserBillDetailResponse>> getMyBillDetailById(
             @PathVariable Long id) {

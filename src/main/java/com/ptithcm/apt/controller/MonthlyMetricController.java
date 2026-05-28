@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class MonthlyMetricController {
     private final MonthlyMetricService monthlyMetricService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
     @GetMapping()
     public ResponseEntity<ApiResponse<PreviousMonthlyMetricResponse>> getPreviousMonthlyMetric(
             @RequestParam("apartmentId") Long apartmentId) {

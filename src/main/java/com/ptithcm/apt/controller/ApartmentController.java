@@ -30,7 +30,7 @@ public class ApartmentController {
 
     private final ApartmentService apartmentService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF','ACCOUNTANT')")
     @GetMapping
     public ResponseEntity<Page<ApartmentResponse>> getAllApartments(@RequestParam(defaultValue = "0") int page) {
         Page<ApartmentResponse> responses = apartmentService.getAllApartments(page);
@@ -50,7 +50,7 @@ public class ApartmentController {
         return ResponseEntity.ok(apartmentService.updateApartment(id, request));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'ACCOUNTANT')")
     @GetMapping("/search")
     public ResponseEntity<List<ApartmentResponse>> searchApartmentsByRoomNumber(@RequestParam String keyword) {
         return ResponseEntity.ok(apartmentService.searchApartmentsByRoomNumber(keyword));

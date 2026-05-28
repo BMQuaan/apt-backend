@@ -26,7 +26,6 @@ import com.ptithcm.apt.enums.RentStatus;
 import com.ptithcm.apt.service.RentInvoiceService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
@@ -35,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class RentInvoiceController {
     private final RentInvoiceService rentInvoiceService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
     @GetMapping()
     public ResponseEntity<ApiResponse<PageResponse<AdminRentInvoiceListResponse>>> getRentInvoiceListByAdmin(
             @RequestParam(required = false) Integer month,
@@ -50,7 +49,7 @@ public class RentInvoiceController {
                 .ok(ApiResponse.success(PageResponse.from(rentinvoices), "Lấy danh sách hóa đơn thuê nhà thành công"));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AdminRentInvoiceDetailResponse>> getRentInvoiceDetailByAdmin(
             @PathVariable Long id) {
@@ -58,7 +57,7 @@ public class RentInvoiceController {
         return ResponseEntity.ok(ApiResponse.success(res, "Lấy chi tiết hóa đơn thuê nhà thành công"));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<UpdateRentInvoiceStatusResponse>> updateRentInvoiceStatus(
             @PathVariable Long id,
@@ -67,6 +66,7 @@ public class RentInvoiceController {
         return ResponseEntity.ok(ApiResponse.success(res, "Cập nhật trạng thái hóa đơn thuê nhà thành công"));
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN','ACCOUNTANT')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<UserRentInvoiceListResponse>>> getMyRentInvoices(
             @RequestParam(required = false) Integer month,
@@ -79,6 +79,7 @@ public class RentInvoiceController {
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(res), "Lấy danh sách hóa đơn thuê nhà của tôi thành công"));
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN','ACCOUNTANT')")
     @GetMapping("/me/{id}")
     public ResponseEntity<ApiResponse<UserRentInvoiceDetailResponse>> getMyRentInvoiceDetailById(
             @PathVariable Long id) {
