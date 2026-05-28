@@ -226,7 +226,10 @@ public class UC12_CreateBill_UnitTest {
     @DisplayName("TC-12: Branch - Hợp đồng hết hạn trước kỳ thanh toán")
     void testCreateRentInvoice_Fail_ContractExpiresBeforeBilling() {
         User creator = new User();
-        CreateRentInvoiceRequest rentReq = new CreateRentInvoiceRequest(1L, 6, 2026, creator);
+        LocalDate now = LocalDate.now();
+        // Lập kỳ thanh toán là ngày 1 của tháng tiếp theo
+        LocalDate billingDate = now.plusMonths(1).withDayOfMonth(1);
+        CreateRentInvoiceRequest rentReq = new CreateRentInvoiceRequest(1L, billingDate.getMonthValue(), billingDate.getYear(), creator);
 
         Resident tenant = new Resident();
         tenant.setFullName("Nguyen Van Tenant");
@@ -234,7 +237,8 @@ public class UC12_CreateBill_UnitTest {
         ResidentApartment contract = new ResidentApartment();
         contract.setResident(tenant);
         contract.setApartment(apartment);
-        contract.setContractEnd(LocalDate.of(2026, 6, 15));
+        // Hết hạn trước kỳ thanh toán 1 ngày (ví dụ: ngày cuối của tháng hiện tại - chắc chắn sau now)
+        contract.setContractEnd(billingDate.minusDays(1));
 
         when(residentApartmentService.findActiveTenant(1L)).thenReturn(Optional.of(contract));
 
