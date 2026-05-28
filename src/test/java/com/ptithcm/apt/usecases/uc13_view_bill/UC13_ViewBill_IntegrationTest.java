@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("UC13_ViewBill_IntegrationTest - Kiểm thử Tích hợp Xem Hóa Đơn")
 public class UC13_ViewBill_IntegrationTest {
 
@@ -66,7 +68,7 @@ public class UC13_ViewBill_IntegrationTest {
                         .param("month", "5")
                         .param("year", "2026")
                         .param("apartmentId", "1")
-                        .param("status", "UNPAID")
+                        .param("status", "PAID")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].id").value(99))

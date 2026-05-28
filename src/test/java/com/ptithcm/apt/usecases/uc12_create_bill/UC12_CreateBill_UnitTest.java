@@ -234,7 +234,7 @@ public class UC12_CreateBill_UnitTest {
         ResidentApartment contract = new ResidentApartment();
         contract.setResident(tenant);
         contract.setApartment(apartment);
-        contract.setContractEnd(LocalDate.of(2026, 5, 15));
+        contract.setContractEnd(LocalDate.of(2026, 6, 15));
 
         when(residentApartmentService.findActiveTenant(1L)).thenReturn(Optional.of(contract));
 

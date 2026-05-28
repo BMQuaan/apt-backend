@@ -34,7 +34,7 @@ public class UC10_Apartment_IntegrationTest {
     void testCreateApartment_Success() throws Exception {
 
         ApartmentRequest request = new ApartmentRequest();
-        request.setRoomNumber("209");
+        request.setRoomNumber("210");
         request.setFloor(2);
         request.setArea(new BigDecimal("50.5"));
         request.setStatus("AVAILABLE");
