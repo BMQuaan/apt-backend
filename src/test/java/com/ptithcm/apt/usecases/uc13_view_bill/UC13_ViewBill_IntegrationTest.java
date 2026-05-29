@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("UC13_ViewBill_IntegrationTest - Kiểm thử Tích hợp Xem Hóa Đơn")
 public class UC13_ViewBill_IntegrationTest {
 
@@ -46,7 +48,7 @@ public class UC13_ViewBill_IntegrationTest {
     private RentInvoiceService rentInvoiceService;
 
     @Test
-    @WithMockUser(username = "residentA", roles = "RESIDENT")
+    @WithMockUser(username = "residentA", roles = "USER")
     @DisplayName("TC-01/09: Lấy danh sách hóa đơn dịch vụ của tôi thành công - Filter hợp lệ")
     void testGetMyBills_Success() throws Exception {
         UserBillListResponse billRes = UserBillListResponse.builder()
@@ -74,7 +76,7 @@ public class UC13_ViewBill_IntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "tenantC", roles = "RESIDENT")
+    @WithMockUser(username = "tenantC", roles = "USER")
     @DisplayName("TC-03: Lấy danh sách hóa đơn thuê nhà của tôi thành công")
     void testGetMyRentInvoices_Success() throws Exception {
         UserRentInvoiceListResponse rentRes = UserRentInvoiceListResponse.builder()
@@ -100,7 +102,7 @@ public class UC13_ViewBill_IntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "residentA", roles = "RESIDENT")
+    @WithMockUser(username = "residentA", roles = "USER")
     @DisplayName("TC-05: Xem chi tiết hóa đơn dịch vụ hợp lệ")
     void testGetMyBillDetail_Success() throws Exception {
         UserBillDetailResponse detail = UserBillDetailResponse.builder()
@@ -122,7 +124,7 @@ public class UC13_ViewBill_IntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "tenantC", roles = "RESIDENT")
+    @WithMockUser(username = "tenantC", roles = "USER")
     @DisplayName("TC-07: Xem chi tiết hóa đơn thuê nhà hợp lệ")
     void testGetMyRentInvoiceDetail_Success() throws Exception {
         UserRentInvoiceDetailResponse detail = UserRentInvoiceDetailResponse.builder()
@@ -144,7 +146,7 @@ public class UC13_ViewBill_IntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "residentA", roles = "RESIDENT")
+    @WithMockUser(username = "residentA", roles = "USER")
     @DisplayName("TC-08: BVA - Truyền sai Enum Status cho Bill list")
     void testGetMyBills_Fail_InvalidStatusEnum() throws Exception {
         mockMvc.perform(get("/api/v1/bills/me")
