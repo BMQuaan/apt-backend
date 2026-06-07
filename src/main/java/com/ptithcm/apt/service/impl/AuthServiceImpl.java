@@ -13,7 +13,7 @@ import com.ptithcm.apt.entity.User;
 import com.ptithcm.apt.exception.NotFoundException;
 import com.ptithcm.apt.service.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -207,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = RuntimeException.class)
     public String verifyOtp(VerifyOtpRequest request) {
         userService.findByUsername(request.email()); // throws NotFoundException nếu không tồn tại
 
@@ -244,7 +244,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = RuntimeException.class)
     public void resetPassword(ResetPasswordRequest request) {
         String hashedTokenFromUser = hashToken(request.resetToken());
 
