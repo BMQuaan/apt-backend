@@ -1,4 +1,4 @@
-package com.ptithcm.apt.usecases.uc09_moveout; // Đổi package theo đúng file của bạn
+package com.ptithcm.apt.usecases.uc09_moveout;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

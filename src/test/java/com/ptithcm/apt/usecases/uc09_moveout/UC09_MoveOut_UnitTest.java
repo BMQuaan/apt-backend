@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,8 +103,7 @@ public class UC09_MoveOut_UnitTest {
         assertEquals("AVAILABLE", apartment.getStatus());
         verify(apartmentRepository, times(1)).save(apartment);
 
-        // Xác nhận tài khoản User bị khóa do không còn phòng nào khác
-        assertFalse(resident.getUser().getIsActive());
-        verify(userRepository, times(1)).save(resident.getUser());
+        // Xác nhận tài khoản User bị xóa
+        verify(userRepository, times(1)).delete(resident.getUser());
     }
 }

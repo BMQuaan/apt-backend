@@ -37,4 +37,6 @@ public interface ResidentService {
 
     Optional<Resident> findById(Long userId);
 
+    Optional<ResidentResponse> checkResidentByCccd(String cccd);
+
 }

@@ -84,4 +84,12 @@ public class ResidentController {
         List<MyApartmentResponse> myRooms = residentService.getMyApartments();
         return ResponseEntity.ok(myRooms);
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @GetMapping("/check/{cccd}")
+    public ResponseEntity<ResidentResponse> checkResidentByCccd(@PathVariable String cccd) {
+        return residentService.checkResidentByCccd(cccd)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

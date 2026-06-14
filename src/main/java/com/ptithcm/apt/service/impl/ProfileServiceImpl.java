@@ -113,26 +113,38 @@ public class ProfileServiceImpl implements ProfileService {
 
     private List<FamilyMemberResponse> extractFamilyMembers(Resident resident,
             List<ResidentApartment> myActiveLinks) {
-        Long livingAptId = myActiveLinks.stream()
+        ResidentApartment myLivingLink = myActiveLinks.stream()
                 .filter(ra -> "TENANT".equals(ra.getRole())
                         || "MEMBER".equals(ra.getRole())
                         || ra.getIsHead())
-                .map(ra -> ra.getApartment().getId())
                 .findFirst()
                 .orElse(null);
 
-        if (livingAptId == null) {
+        if (myLivingLink == null) {
             return List.of();
         }
 
-        // livingAptId != null
-        List<FamilyMemberResponse> familyMembers = new ArrayList<>();
+        Long livingAptId = myLivingLink.getApartment().getId();
+        String myRole = myLivingLink.getRole();
 
+        List<FamilyMemberResponse> familyMembers = new ArrayList<>();
         List<ResidentApartment> aptResidents = residentApartmentService.findActiveByApartmentId(livingAptId);
 
         for (ResidentApartment aptRes : aptResidents) {
             if (aptRes.getResident().getId().equals(resident.getId()))
                 continue;
+
+            // Nếu người đang xem là người thuê/thành viên ở ghép, không coi chủ sở hữu
+            // (OWNER) là thành viên gia đình
+            if (("TENANT".equals(myRole) || "MEMBER".equals(myRole)) && "OWNER".equals(aptRes.getRole())) {
+                continue;
+            }
+
+            // Ngược lại, nếu người đang xem là chủ sở hữu, không coi người thuê (TENANT) là
+            // thành viên gia đình
+            if ("OWNER".equals(myRole) && "TENANT".equals(aptRes.getRole())) {
+                continue;
+            }
 
             boolean isAlreadyAdded = familyMembers.stream()
                     .anyMatch(m -> m.residentId().equals(aptRes.getResident().getId()));

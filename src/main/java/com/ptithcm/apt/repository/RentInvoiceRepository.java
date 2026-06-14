@@ -47,4 +47,6 @@ public interface RentInvoiceRepository extends JpaRepository<RentInvoice, Long>,
         Optional<RentInvoice> findByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
         List<RentInvoice> findAllByStatusAndDueDateBefore(RentStatus status, LocalDateTime dateTime);
+
+        boolean existsByApartmentIdAndStatus(Long apartmentId, RentStatus status);
 }
