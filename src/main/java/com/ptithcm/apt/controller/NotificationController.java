@@ -3,6 +3,7 @@ package com.ptithcm.apt.controller;
 import com.ptithcm.apt.dto.request.CreateNotificationRequest;
 import com.ptithcm.apt.dto.response.ApiResponse;
 import com.ptithcm.apt.dto.response.NotificationResponse;
+import com.ptithcm.apt.dto.response.NotificationTargetResponse;
 import com.ptithcm.apt.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,14 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.success(
                 notificationService.getAllNotifications(),
                 "Lấy danh sách thông báo quản trị thành công"));
+    }
+
+    @GetMapping("/targets")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<NotificationTargetResponse>>> getNotificationTargets() {
+        return ResponseEntity.ok(ApiResponse.success(
+                notificationService.getNotificationTargets(),
+                "Lay danh sach chu ho nhan thong bao thanh cong"));
     }
 
     @GetMapping("/my")

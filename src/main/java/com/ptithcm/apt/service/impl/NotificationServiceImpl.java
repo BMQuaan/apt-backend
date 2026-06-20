@@ -2,6 +2,7 @@ package com.ptithcm.apt.service.impl;
 
 import com.ptithcm.apt.dto.request.CreateNotificationRequest;
 import com.ptithcm.apt.dto.response.NotificationResponse;
+import com.ptithcm.apt.dto.response.NotificationTargetResponse;
 import com.ptithcm.apt.entity.Apartment;
 import com.ptithcm.apt.entity.Notification;
 import com.ptithcm.apt.entity.NotificationRecipient;
@@ -78,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponse> getMyNotifications() {
-        List<Long> apartmentIds = getCurrentResidentApartmentIds();
+        List<Long> apartmentIds = getCurrentResidentHeadApartmentIds();
         if (apartmentIds.isEmpty()) {
             return List.of();
         }
@@ -91,8 +92,22 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public List<NotificationTargetResponse> getNotificationTargets() {
+        return residentApartmentRepository.findByIsHeadTrueAndIsActiveTrue()
+                .stream()
+                .map(residency -> new NotificationTargetResponse(
+                        residency.getApartment().getId(),
+                        residency.getApartment().getRoomNumber(),
+                        residency.getResident().getFullName(),
+                        residency.getResident().getEmail()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional
     public void markMyNotificationsAsRead() {
-        List<Long> apartmentIds = getCurrentResidentApartmentIds();
+        List<Long> apartmentIds = getCurrentResidentHeadApartmentIds();
         if (apartmentIds.isEmpty()) {
             return;
         }
@@ -117,28 +132,43 @@ public class NotificationServiceImpl implements NotificationService {
 
     private List<Apartment> resolveTargetApartments(String targetType, List<Long> apartmentIds) {
         if (TARGET_ALL.equals(targetType)) {
-            return apartmentRepository.findAll();
+            return residentApartmentRepository.findByIsHeadTrueAndIsActiveTrue()
+                    .stream()
+                    .map(ResidentApartment::getApartment)
+                    .distinct()
+                    .toList();
         }
 
         if (apartmentIds == null || apartmentIds.isEmpty()) {
             throw new IllegalArgumentException("Vui lòng chọn ít nhất một căn hộ nhận thông báo");
         }
 
-        List<Apartment> apartments = apartmentRepository.findAllById(apartmentIds);
-        if (apartments.size() != apartmentIds.size()) {
+        List<Long> uniqueApartmentIds = apartmentIds.stream().distinct().toList();
+        List<Apartment> apartments = apartmentRepository.findAllById(uniqueApartmentIds);
+        if (apartments.size() != uniqueApartmentIds.size()) {
             throw new NotFoundException("Một hoặc nhiều căn hộ nhận thông báo không tồn tại");
         }
-        return apartments;
+        List<Apartment> headApartments = residentApartmentRepository
+                .findByApartment_IdInAndIsHeadTrueAndIsActiveTrue(uniqueApartmentIds)
+                .stream()
+                .map(ResidentApartment::getApartment)
+                .distinct()
+                .toList();
+        if (headApartments.size() != uniqueApartmentIds.size()) {
+            throw new IllegalArgumentException("Mot hoac nhieu can ho chua co chu ho dang hoat dong");
+        }
+
+        return headApartments;
     }
 
-    private List<Long> getCurrentResidentApartmentIds() {
+    private List<Long> getCurrentResidentHeadApartmentIds() {
         String username = SecurityUtils.getCurrentUsername();
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng hiện tại"));
         Resident resident = residentRepository.findByUser_Id(currentUser.getId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy hồ sơ cư dân cho tài khoản hiện tại"));
 
-        return residentApartmentRepository.findByResident_IdAndIsActiveTrue(resident.getId())
+        return residentApartmentRepository.findByResident_IdAndIsHeadTrueAndIsActiveTrue(resident.getId())
                 .stream()
                 .map(ResidentApartment::getApartment)
                 .map(Apartment::getId)
@@ -147,13 +177,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private NotificationResponse toResponse(Notification notification, Boolean isRead) {
+        List<String> roomNumbers = recipientRepository.findByNotification_Id(notification.getId())
+                .stream()
+                .map(NotificationRecipient::getApartment)
+                .map(Apartment::getRoomNumber)
+                .distinct()
+                .toList();
+        String targetSummary = roomNumbers.isEmpty()
+                ? translateTargetType(notification.getTargetType())
+                : "Căn " + String.join(", ", roomNumbers);
+
         return new NotificationResponse(
                 notification.getId(),
                 notification.getTitle(),
                 notification.getContent(),
                 notification.getTargetType(),
+                targetSummary,
+                roomNumbers,
                 isRead,
                 notification.getCreatedAt()
         );
+    }
+
+    private String translateTargetType(String targetType) {
+        if (TARGET_SPECIFIC.equals(targetType)) {
+            return "Căn hộ được chọn";
+        }
+        return "Tất cả chủ hộ";
     }
 }
