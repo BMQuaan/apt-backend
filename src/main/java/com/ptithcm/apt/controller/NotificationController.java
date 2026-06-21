@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,4 +65,11 @@ public class NotificationController {
         notificationService.markMyNotificationsAsRead();
         return ResponseEntity.ok(ApiResponse.success(null, "Đã đánh dấu tất cả thông báo là đã đọc"));
     }
+    @PatchMapping("/my/{id}/read")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> markMyNotificationAsRead(@PathVariable Long id) {
+        notificationService.markMyNotificationAsRead(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Da danh dau thong bao la da doc"));
+    }
 }
+

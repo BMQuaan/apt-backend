@@ -8,6 +8,8 @@ import java.util.List;
 public interface NotificationRecipientRepository extends JpaRepository<NotificationRecipient, Long> {
     List<NotificationRecipient> findByNotification_Id(Long notificationId);
 
+    List<NotificationRecipient> findByNotification_IdAndApartment_IdIn(Long notificationId, List<Long> apartmentIds);
+
     List<NotificationRecipient> findByApartment_IdInOrderByNotification_CreatedAtDesc(List<Long> apartmentIds);
 
     List<NotificationRecipient> findByApartment_IdInAndIsReadFalse(List<Long> apartmentIds);

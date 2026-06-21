@@ -16,4 +16,6 @@ public interface NotificationService {
     List<NotificationTargetResponse> getNotificationTargets();
 
     void markMyNotificationsAsRead();
+
+    void markMyNotificationAsRead(Long notificationId);
 }

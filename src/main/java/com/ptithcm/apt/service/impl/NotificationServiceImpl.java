@@ -22,7 +22,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -84,7 +86,18 @@ public class NotificationServiceImpl implements NotificationService {
             return List.of();
         }
 
-        return recipientRepository.findByApartment_IdInOrderByNotification_CreatedAtDesc(apartmentIds)
+        Map<Long, NotificationRecipient> recipientsByNotification = new LinkedHashMap<>();
+        recipientRepository.findByApartment_IdInOrderByNotification_CreatedAtDesc(apartmentIds)
+                .forEach(recipient -> recipientsByNotification.merge(
+                        recipient.getNotification().getId(),
+                        recipient,
+                        (existing, next) -> {
+                            existing.setIsRead(Boolean.TRUE.equals(existing.getIsRead())
+                                    && Boolean.TRUE.equals(next.getIsRead()));
+                            return existing;
+                        }));
+
+        return recipientsByNotification.values()
                 .stream()
                 .map(recipient -> toResponse(recipient.getNotification(), recipient.getIsRead()))
                 .toList();
@@ -116,6 +129,24 @@ public class NotificationServiceImpl implements NotificationService {
                 recipientRepository.findByApartment_IdInAndIsReadFalse(apartmentIds);
         unreadRecipients.forEach(recipient -> recipient.setIsRead(true));
         recipientRepository.saveAll(unreadRecipients);
+    }
+
+    @Override
+    @Transactional
+    public void markMyNotificationAsRead(Long notificationId) {
+        List<Long> apartmentIds = getCurrentResidentHeadApartmentIds();
+        if (apartmentIds.isEmpty()) {
+            return;
+        }
+
+        List<NotificationRecipient> recipients =
+                recipientRepository.findByNotification_IdAndApartment_IdIn(notificationId, apartmentIds);
+        if (recipients.isEmpty()) {
+            throw new NotFoundException("Khong tim thay thong bao cua tai khoan hien tai");
+        }
+
+        recipients.forEach(recipient -> recipient.setIsRead(true));
+        recipientRepository.saveAll(recipients);
     }
 
     private String normalizeTargetType(String targetType) {
